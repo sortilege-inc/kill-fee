@@ -20,6 +20,7 @@ yellow band on the masthead.
 | `factions/` | Corps & Gangs, player-facing. **Empty** — the GM view is under `gm/` |
 | `night-city/` | Districts and places, player-facing. **Empty** — the GM view is under `gm/` |
 | `gear/` | Gear & Chrome. **Empty — after the remap settles equipment** |
+| `cards/` | Domain Cards — one page per remapped domain, cards rendered from a `.cards.json` sidecar with the staged netrunner art. **Codex levels 1–2 so far** |
 | `lore/` | How the city works. **Empty** |
 | `table/` | Player-facing: principles, Session 0, character options. **Empty until the remap is done** |
 | `gm/` | **Behind the Blackwall** — campaign frame, the remap workbench, character menus, the plot, session outline, factions, locations, campaign state, next session |
@@ -67,6 +68,15 @@ Maps live in `../kill-fee-support/build/maps/` (the game-maps.com Night City wor
 district maps). `atlas_map` in `site.config.json` draws the world map at the top of the Night City
 index; any page can carry `map: <file>` in its front matter to show a district map above its text.
 Only referenced maps are copied into the repo.
+
+Domain cards: `content/cards/<domain>.md` carries the domain's intro; `content/cards/<domain>.cards.json`
+lists its cards (`name`, `was`, `level`, `domain`, `type`, `recall`, `art`, `art_credit`, `text` in
+Markdown). `art` is a path under `build/art/`; the build copies referenced files into `cards/img/`.
+
+Card art for the remap (domain cards, cyberware, quickhacks) is staged in
+`../kill-fee-support/build/art/netrunner/` — 155 Android: Netrunner card illustrations, mostly
+Emilio Rodriguez, liiga and other DeviantArt pieces, named by card. Only files a card references
+are copied into the repo.
 
 The optional spine tally (`spine` in `site.config.json`, off by default) draws a numbered row on
 the home page and the Gigs index — set it to `{"label": "…", "total": N, "reached": M}` once the
