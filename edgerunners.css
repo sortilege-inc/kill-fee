@@ -580,3 +580,17 @@ article h2, article h3{ scroll-margin-top:5.5rem; }
 .card.build-card{ border-color:var(--essentia-dim); }
 .card.build-card::before{ background:var(--essentia); }
 .card.build-card .cat{ color:var(--essentia); }
+
+/* ------------------------------------------------------------ home band spans the top (2026-10-02) */
+body{ overflow-x:clip; }
+.masthead.home{ padding-top:0; }
+.masthead.home .band{
+  display:block; width:auto; margin:0 calc(50% - 50vw) 0 calc(50% - 50vw);
+  padding:clamp(2.2rem,6vw,4.2rem) 1rem clamp(2.4rem,5vw,3.6rem);
+  clip-path:none; box-shadow:0 30px 70px rgba(0,0,0,0.7);
+  border-bottom:1px solid var(--night);
+}
+.masthead.home .band::before{ height:8px; }
+.masthead.home .band::after{ /* cyan hairline under the stripe — the screen edge */
+  content:""; position:absolute; left:0; right:0; bottom:-3px; height:2px; background:var(--essentia); opacity:0.8;
+}
