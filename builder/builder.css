@@ -167,3 +167,12 @@ details.step-text .book{ padding:0 1.1rem 0.8rem; font-size:0.9rem; line-height:
 .opt .ln{ display:block; font-family:var(--type); font-size:0.62rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--bone-2); margin-top:0.25rem; }
 .opt .ln.doms{ display:flex; gap:0.3rem; flex-wrap:wrap; margin-top:0; }
 .opt .ln.netrun{ color:var(--essentia); }
+
+/* zoomable map */
+.mapview{ margin:0 0 1rem; border:1px solid var(--edge); background:var(--night); }
+.mapstage{ height:min(60vh,520px); overflow:hidden; position:relative; cursor:grab; touch-action:none; }
+.mapstage.grab{ cursor:grabbing; }
+.mapstage img{ position:absolute; left:0; top:0; width:100%; height:auto; transform-origin:center center; will-change:transform; user-select:none; pointer-events:none; }
+.mapctl{ display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center; padding:0.5rem 0.6rem; border-top:1px solid var(--edge-soft); }
+.mapctl .btn{ text-decoration:none; }
+.mapctl .hint{ margin:0 0 0 auto; }

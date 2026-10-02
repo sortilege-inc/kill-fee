@@ -5,7 +5,7 @@
   const D = window.KF_DATA;
   const KEY = 'kf-builder-v1';
   const LEVEL = D.level || 1;
-  const STEP_TITLES = ['Archetype', 'Heritage', 'Traits', 'Record', 'Equipment', 'Background', 'Experiences', 'Domain cards', 'Connections'];
+  const STEP_TITLES = ['Archetype', 'Neighborhood', 'Cyberware', 'Traits', 'Record', 'Equipment', 'Background', 'Experiences', 'Domain cards', 'Connections'];
 
   // ---------------------------------------------------------------- state
   function fresh() {
@@ -49,14 +49,15 @@
   function stepDone(n) {
     switch (n) {
       case 1: return !!(cls() && sub());
-      case 2: return !!(community() && (st.nochrome || (chrome('top') && chrome('bottom'))));
-      case 3: return traitsOk();
-      case 4: return !!cls();
-      case 5: { const p = weapon(st.primary); return !!(p && armor() && st.potion && (p.burden === 'Two-Handed' || true)); }
-      case 6: return !!st.name;
-      case 7: return st.experiences.every((e) => e && e.trim());
-      case 8: return cards().length === 2;
-      case 9: return [1, 2, 3, 4, 5, 6, 7, 8].every(stepDone);
+      case 2: return !!community();
+      case 3: return !!(st.nochrome || (chrome('top') && chrome('bottom')));
+      case 4: return traitsOk();
+      case 5: return !!cls();
+      case 6: return !!(weapon(st.primary) && armor() && st.potion);
+      case 7: return !!st.name;
+      case 8: return st.experiences.every((e) => e && e.trim());
+      case 9: return cards().length === 2;
+      case 10: return [1, 2, 3, 4, 5, 6, 7, 8, 9].every(stepDone);
     }
     return false;
   }
@@ -156,7 +157,42 @@
     box.appendChild(panel(s.name, c.was + ' — ' + s.was, kids));
   }
 
+  function mapViewer() {
+    const img = el('img', { src: 'img/' + D.map.image, alt: D.map.caption || 'Night City', draggable: 'false' });
+    const stage = el('div', { class: 'mapstage' }, [img]);
+    let sc = 1, tx = 0, ty = 0, drag = null;
+    const apply = () => { img.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + sc + ')'; };
+    const zoomAt = (f, cx, cy) => {
+      const r = stage.getBoundingClientRect(), x = cx - r.left - r.width / 2, y = cy - r.top - r.height / 2;
+      const ns = Math.min(6, Math.max(0.5, sc * f));
+      tx = x - (x - tx) * (ns / sc); ty = y - (y - ty) * (ns / sc); sc = ns; apply();
+    };
+    stage.addEventListener('wheel', (e) => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY); }, { passive: false });
+    stage.addEventListener('pointerdown', (e) => { drag = { x: e.clientX - tx, y: e.clientY - ty }; stage.setPointerCapture(e.pointerId); stage.classList.add('grab'); });
+    stage.addEventListener('pointermove', (e) => { if (drag) { tx = e.clientX - drag.x; ty = e.clientY - drag.y; apply(); } });
+    const up = () => { drag = null; stage.classList.remove('grab'); };
+    stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+    const center = () => stage.getBoundingClientRect();
+    const ctl = el('div', { class: 'mapctl' }, [
+      el('button', { type: 'button', class: 'btn ghost', onclick: () => { const r = center(); zoomAt(1.4, r.left + r.width / 2, r.top + r.height / 2); } }, '+'),
+      el('button', { type: 'button', class: 'btn ghost', onclick: () => { const r = center(); zoomAt(1 / 1.4, r.left + r.width / 2, r.top + r.height / 2); } }, '−'),
+      el('button', { type: 'button', class: 'btn ghost', onclick: () => { sc = 1; tx = 0; ty = 0; apply(); } }, 'Reset'),
+      el('a', { class: 'btn ghost', href: 'img/' + D.map.image, target: '_blank', rel: 'noopener' }, 'Open full size'),
+      el('span', { class: 'hint' }, 'Scroll to zoom, drag to pan.'),
+    ]);
+    return el('div', { class: 'mapview' }, [stage, ctl]);
+  }
+
   function step2(box) {
+    const kids = [hint('Your community is the neighborhood that raised you. Pick one; its feature is yours.')];
+    if (D.map && D.map.image) kids.push(mapViewer());
+    const g = el('div', { class: 'opts' });
+    for (const c of D.communities) g.appendChild(opt(c.name, st.community === c.name, () => { st.community = c.name; save(); redraw(); }, { blurb: c.blurb, text: c.text, was: c.was }));
+    kids.push(g);
+    box.appendChild(panel('Neighborhood', '15 — where you\'re from', kids));
+  }
+
+  function step3(box) {
     const nc = el('label', { class: 'hint' }, [el('input', { type: 'checkbox', onchange: (e) => { st.nochrome = e.target.checked; if (st.nochrome) { st.top = null; st.bottom = null; } save(); redraw(); } }), ' No chrome — skip the implants (talk to the GM about what you get instead).']);
     nc.querySelector('input').checked = !!st.nochrome;
     const kids = [hint('Nobody is born with an ancestry in Night City; you buy one. Pick <b>one top-slot</b> implant and <b>one bottom-slot</b> implant.'), nc];
@@ -168,12 +204,9 @@
       }
     }
     box.appendChild(panel('Cyberware', '47 implants', kids));
-    const g = el('div', { class: 'opts' });
-    for (const c of D.communities) g.appendChild(opt(c.name, st.community === c.name, () => { st.community = c.name; save(); redraw(); }, { blurb: c.blurb, text: c.text, was: c.was }));
-    box.appendChild(panel('Community', 'the neighborhood that raised you', [g]));
   }
 
-  function step3(box) {
+  function step4(box) {
     const grid = el('div', { class: 'traits' });
     const pool = D.modifiers.slice();
     for (const t of D.traits) {
@@ -190,7 +223,7 @@
       el('p', { class: 'pool' + (ok ? ' ok' : '') }, [ok ? 'All six assigned.' : 'Still to place: ', el('span', { class: 'left' }, ok ? '' : left.map((m) => (m > 0 ? '+' : '') + m).join(', ') || 'nothing — but the set is wrong; use each value once')])]));
   }
 
-  function step4(box) {
+  function step5(box) {
     const d = derived(), c = cls();
     if (!c) { box.appendChild(hint('Pick a class first — Evasion and Hit Points come from it.', true)); return; }
     box.appendChild(panel('Recorded for you', null, [
@@ -206,7 +239,7 @@
     ]));
   }
 
-  function step5(box) {
+  function step6(box) {
     const prim = weapon(st.primary);
     const twoH = prim && prim.burden === 'Two-Handed';
     const wrow = (w) => w.trait + ' · ' + w.range + ' · ' + w.damage + ' · ' + w.burden;
@@ -231,7 +264,7 @@
     box.appendChild(panel('Other starting items', null, [pg, c ? hint('Class items: <b>' + esc(c.class_items) + '</b>') : null, hint('Plus the basics — rope, supplies, a handful of eddies. The GM will say what that looks like in Night City.')]));
   }
 
-  function step6(box) {
+  function step7(box) {
     const c = cls();
     const kids = [field('Character description', st.description, (v) => { st.description = v; save(); }, true)];
     if (c) for (const q of c.background_questions) kids.push(field(q, st.background[q], (v) => { st.background[q] = v; save(); }, true));
@@ -239,7 +272,7 @@
     box.appendChild(panel('Background', c ? c.name + ' questions' : null, kids));
   }
 
-  function step7(box) {
+  function step8(box) {
     box.appendChild(panel('Experiences', 'two, each +2', [
       field('Experience 1 (+2)', st.experiences[0], (v) => { st.experiences[0] = v; save(); side(); }),
       field('Experience 2 (+2)', st.experiences[1], (v) => { st.experiences[1] = v; save(); side(); }),
@@ -247,7 +280,7 @@
     ]));
   }
 
-  function step8(box) {
+  function step9(box) {
     const c = cls();
     if (!c) { box.appendChild(hint('Pick a class first — your cards come from its two domains.', true)); return; }
     const g = el('div', { class: 'opts wide' });
@@ -262,17 +295,17 @@
     box.appendChild(panel('Domain cards', c.domains.join(' + ') + ' · choose two', [hint('Converted cards carry their Night City name; the rest still show their original name with the renamed terms inside.'), g]));
   }
 
-  function step9(box) {
+  function step10(box) {
     const c = cls();
     const kids = [];
     if (c) for (const q of c.connections) kids.push(field(q, st.connections[q], (v) => { st.connections[q] = v; save(); }, true));
     else kids.push(hint('Pick a class to see its connection prompts.', true));
     box.appendChild(panel('Connections', c ? c.name + ' prompts — ask another player' : null, kids));
-    const missing = STEP_TITLES.map((t, i) => (stepDone(i + 1) ? null : (i + 1) + '. ' + t)).filter(Boolean);
+    const missing = STEP_TITLES.map((t, i) => (i + 1 === STEPS.length || stepDone(i + 1) ? null : (i + 1) + '. ' + t)).filter(Boolean);
     box.appendChild(panel('Finish', null, [missing.length ? hint('Still open: ' + missing.join(' · '), true) : hint('Everything is filled in. Export the JSON for the GM, or print the sheet.'),
       el('div', { class: 'sheet-acts' }, [el('button', { class: 'btn', type: 'button', onclick: exportJson }, 'Export JSON'), el('button', { class: 'btn cyan', type: 'button', onclick: () => window.print() }, 'Print sheet')])]));
   }
-  const STEPS = [step1, step2, step3, step4, step5, step6, step7, step8, step9];
+  const STEPS = [step1, step2, step3, step4, step5, step6, step7, step8, step9, step10];
 
   // ---------------------------------------------------------------- export / import / print
   function exportJson() {
