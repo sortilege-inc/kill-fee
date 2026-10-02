@@ -200,17 +200,17 @@
     const mk = (list, key, disabled) => {
       const g = el('div', { class: 'opts' });
       for (const w of list) {
-        const b = opt(w.name, st[key] === w.name, () => { st[key] = st[key] === w.name ? null : w.name; if (key === 'primary' && weapon(st.primary) && weapon(st.primary).burden === 'Two-Handed') st.secondary = null; save(); redraw(); }, { meta: wrow(w), text: w.feature || '', cls: 'unmapped' });
+        const b = opt(w.name, st[key] === w.name, () => { st[key] = st[key] === w.name ? null : w.name; if (key === 'primary' && weapon(st.primary) && weapon(st.primary).burden === 'Two-Handed') st.secondary = null; save(); redraw(); }, { meta: wrow(w), text: w.feature || '', was: w.was });
         if (disabled) b.disabled = true;
         g.appendChild(b);
       }
       return g;
     };
-    box.appendChild(hint('Weapons and armor are still the base tier 1 tables — guns and chrome names are coming. The numbers are what count.', true));
+    box.appendChild(hint('Tier 1 gear. Guns use the same ranges and damage dice as the originals; tech and smart weapons need a Netrun trait.'));
     box.appendChild(panel('Primary weapon', 'two-handed, or one-handed plus a secondary', [mk(D.equipment.weapons.filter((w) => w.category === 'Primary'), 'primary')]));
     box.appendChild(panel('Secondary weapon', twoH ? 'not with a two-handed primary' : 'one-handed primary only', [mk(D.equipment.weapons.filter((w) => w.category === 'Secondary'), 'secondary', twoH)]));
     const ag = el('div', { class: 'opts' });
-    for (const a of D.equipment.armor) ag.appendChild(opt(a.name, st.armor === a.name, () => { st.armor = a.name; save(); redraw(); }, { meta: 'Thresholds ' + a.major + ' / ' + a.severe + ' · Armor Score ' + a.score, text: a.feature || '', cls: 'unmapped' }));
+    for (const a of D.equipment.armor) ag.appendChild(opt(a.name, st.armor === a.name, () => { st.armor = a.name; save(); redraw(); }, { meta: 'Thresholds ' + a.major + ' / ' + a.severe + ' · Armor Score ' + a.score, text: a.feature || '', was: a.was }));
     box.appendChild(panel('Armor', 'thresholds shown are base; your level is added on the sheet', [ag]));
     const pg = el('div', { class: 'opts' });
     for (const p of ['Minor Health Potion (clear 1d4 Hit Points)', 'Minor Stamina Potion (clear 1d4 Stress)']) pg.appendChild(opt(p, st.potion === p, () => { st.potion = p; save(); redraw(); }, { cls: 'unmapped' }));

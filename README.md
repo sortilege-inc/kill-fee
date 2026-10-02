@@ -19,7 +19,7 @@ yellow band on the masthead.
 | `gigs/` | The job board. **Empty** |
 | `factions/` | Corps & Gangs, player-facing. **Empty** — the GM view is under `gm/` |
 | `night-city/` | Districts and places, player-facing. **Empty** — the GM view is under `gm/` |
-| `gear/` | Gear & Chrome. **Empty — after the remap settles equipment** |
+| `gear/` | Gear & Chrome — a generated Weapons & Armor page: tier 1 and 2 in Night City names (`../kill-fee-support/content/equipment.renames.json`), stats verbatim |
 | `cards/` | Domain Cards — one page per remapped domain, cards rendered from a `.cards.json` sidecar with the staged netrunner art. **Codex levels 1–2 so far** |
 | `lore/` | How the city works. **Empty** |
 | `table/` | Player-facing: principles, Session 0, character options. **Empty until the remap is done** |

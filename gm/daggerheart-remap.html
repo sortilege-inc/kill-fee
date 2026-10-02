@@ -603,6 +603,17 @@ Vagras <em>Scan</em> reads "within Close range, the roll would succeed against, 
 <code>site.config.json</code> to every card — the six traits and Spellcast/Spellcasting — so the sidecar keeps the
 book's wording and the rendered card reads Night City's. Add a pair there when a rename is SET.</p>
 <h2 id="7-equipment">7. Equipment</h2>
+<p><code class="tag tag-set">SET</code> Owner 2026-10-02: <strong>tier 1 and tier 2 weapons and armor carry Cyberpunk 2077-style names</strong>;
+stats, ranges, damage and features stay verbatim. Renames live in <code>content/equipment.renames.json</code>;
+"Improved X" resolves to the renamed X plus "Mk.II" automatically (Advanced → Mk.III, Legendary →
+Mk.IV when those tiers are named). Magic weapons are tech, smart and netrunner gear (Omaha Tech
+Pistol, Shingen Smart SMG, Monowire); bows and crossbows are guns; shields are ballistic and riot
+shields. Combat wheelchairs keep their names.</p>
+<p><code class="tag tag-note">NOTE</code> Corpus fix found doing this (2026-10-02): titterpig-dsl-daggerheart marked every "special"
+weapon and armor from the Tier 2–4 tables (Gilded Falchion, Flickerfly Blade, Hand Cannon, Elundrian
+Chain, Savior Chainmail …) as Tier 1 — 82 items. Corrected in the corpus by the position of each item
+after its tier's Improved/Advanced/Legendary block (equipment file VERSION 0.5.1); the builder's tier 1
+list was showing Hand Cannons until then.</p>
 <div class="tablewrap"><table>
 <thead>
 <tr>
@@ -613,14 +624,24 @@ book's wording and the rendered card reads Night City's. Add a pair there when a
 </thead>
 <tbody>
 <tr>
-<td>Weapons (359)</td>
-<td>guns, using the existing ranges and damage dice</td>
-<td><code class="tag tag-set">SET</code> — names <code class="tag tag-open">OPEN</code></td>
+<td>Weapons, tier 1 (core 32 + H&amp;F 21)</td>
+<td>renamed — see the Character Builder, step 5</td>
+<td><code class="tag tag-set">SET</code></td>
 </tr>
 <tr>
-<td>Armor (76)</td>
+<td>Weapons, tier 2 (Improved + specials, core + H&amp;F)</td>
+<td>renamed</td>
+<td><code class="tag tag-set">SET</code></td>
+</tr>
+<tr>
+<td>Armor, tiers 1–2</td>
+<td>renamed (Ballistic Jacket, Kevlar Vest, Tactical Vest, Riot Armor; Netrunner Suit …)</td>
+<td><code class="tag tag-set">SET</code></td>
+</tr>
+<tr>
+<td>Weapons and armor, tiers 3–4</td>
 <td></td>
-<td><code class="tag tag-open">OPEN</code></td>
+<td><code class="tag tag-open">OPEN</code> — the crew ends at level 5, so tier 3 is the last one that matters</td>
 </tr>
 <tr>
 <td>Loot (207)</td>
@@ -630,7 +651,7 @@ book's wording and the rendered card reads Night City's. Add a pair there when a
 <tr>
 <td>Consumables</td>
 <td></td>
-<td><code class="tag tag-open">OPEN</code> — chems, stims</td>
+<td><code class="tag tag-open">OPEN</code> — chems, stims; the starting potion is still a "potion"</td>
 </tr>
 </tbody>
 </table></div>
