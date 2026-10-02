@@ -573,3 +573,10 @@ article code.tag-yours, article code.tag-mine{ color:var(--lucy); border-color:r
 .dc-foot .was i{ font-style:normal; color:var(--dust); }
 article h2, article h3{ scroll-margin-top:5.5rem; }
 .dc-level.dc-level-tag{ width:auto; padding:6px 10px 10px; font-size:0.6rem; }
+.dc-blurb{ margin:0.2rem 1.1rem 0.3rem; font-family:var(--type); font-size:0.78rem; line-height:1.5; color:var(--dust); text-align:center; }
+.topnav a.build{ color:var(--essentia); }
+.topnav a.build:hover{ color:var(--essentia-lit); }
+.topnav a.build.active{ color:var(--essentia-lit); border-bottom-color:var(--essentia); }
+.card.build-card{ border-color:var(--essentia-dim); }
+.card.build-card::before{ background:var(--essentia); }
+.card.build-card .cat{ color:var(--essentia); }
