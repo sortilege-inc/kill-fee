@@ -125,14 +125,27 @@
         field('Pronouns', st.pronouns, (v) => { st.pronouns = v; save(); side(); }),
       ]),
     ]));
+    // filter by domain (chips up top; any selected domain matches)
+    st.domainFilter = st.domainFilter || [];
+    const allDoms = D.domains.map((d) => d.name);
+    const fbar = el('div', { class: 'dfilter' }, [el('span', { class: 'lbl' }, 'Filter by domain')].concat(
+      allDoms.map((d) => el('button', { type: 'button', class: 'dchip ' + domClass(d) + (st.domainFilter.includes(d) ? ' on' : ''), onclick: () => { st.domainFilter = st.domainFilter.includes(d) ? st.domainFilter.filter((x) => x !== d) : st.domainFilter.concat(d); save(); redraw(); } }, d)),
+      st.domainFilter.length ? [el('button', { type: 'button', class: 'dchip clear', onclick: () => { st.domainFilter = []; save(); redraw(); } }, 'All')] : []));
     const grid = el('div', { class: 'opts' });
+    let shown = 0;
     for (const { c, s } of archetypes()) {
+      if (st.domainFilter.length && !c.domains.some((d) => st.domainFilter.includes(d))) continue;
+      shown++;
       const on = st.cls === c.name && st.sub === s.name;
-      grid.appendChild(opt(s.name, on, () => { st.cls = c.name; st.sub = s.name; st.cards = []; save(); redraw(); }, {
-        meta: c.domains.join(' + ') + ' · Evasion ' + c.evasion + ' · HP ' + c.hp + (s.spellcast_trait ? ' · Netrun ' + s.spellcast_trait : ''),
-        blurb: s.tropes, was: c.was + ' — ' + s.was }));
+      const b = opt(s.name, on, () => { st.cls = c.name; st.sub = s.name; st.cards = []; save(); redraw(); }, { blurb: s.tropes });
+      b.appendChild(el('span', { class: 'lines' }, [
+        el('span', { class: 'ln doms' }, c.domains.map((d) => el('span', { class: 'dchip sm ' + domClass(d) }, d))),
+        el('span', { class: 'ln' }, 'Evasion ' + c.evasion + ' · HP ' + c.hp),
+        s.spellcast_trait ? el('span', { class: 'ln netrun' }, 'Netrun trait: ' + s.spellcast_trait) : null,
+      ]));
+      grid.appendChild(b);
     }
-    box.appendChild(panel('Archetype', '26 — pick one; the class comes with it', [hint('You don\'t have to be the trope. But if you are, you\'re probably this.'), grid]));
+    box.appendChild(panel('Archetype', shown + ' of 26 — pick one; the class comes with it', [hint('You don\'t have to be the trope. But if you are, you\'re probably this.'), fbar, grid]));
     const c = cls(), s = sub();
     if (!c || !s) return;
     const kids = [el('div', { class: 'book', html: md(s.description) })];
@@ -241,7 +254,8 @@
     for (const card of classCards()) {
       const on = st.cards.includes(card.name);
       const b = opt(card.name, on, () => { if (on) st.cards = st.cards.filter((n) => n !== card.name); else if (st.cards.length < 2) st.cards.push(card.name); save(); redraw(); },
-        { meta: card.domain + ' · level ' + card.level + ' · ' + card.type + ' · recall ' + card.recall, text: card.text, was: card.was, cls: card.converted ? '' : 'unmapped' });
+        { meta: 'level ' + card.level + ' · ' + card.type + ' · recall ' + card.recall, text: card.text, was: card.was, cls: card.converted ? '' : 'unmapped' });
+      b.insertBefore(el('span', { class: 'dchip sm ' + domClass(card.domain) }, card.domain), b.firstChild);
       if (!on && st.cards.length >= 2) b.disabled = true;
       g.appendChild(b);
     }
@@ -290,6 +304,7 @@
     const cq = Object.entries(st.connections).filter(([, v]) => v); if (cq.length) h.push('<h2>Connections</h2>' + cq.map(([q, v]) => '<p><i>' + esc(q) + '</i><br>' + esc(v) + '</p>').join(''));
     return h.join('');
   }
+  const domClass = (d) => 'dom-' + String(d).toLowerCase().replace(/[^a-z]+/g, '');
   const fmtMod = (m) => (m === undefined || m === null) ? '—' : (m > 0 ? '+' : '') + m;
 
   // ---------------------------------------------------------------- render
