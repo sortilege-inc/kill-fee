@@ -5,18 +5,20 @@
   const D = window.KF_DATA;
   const KEY = 'kf-builder-v1';
   const LEVEL = D.level || 1;
-  const STEP_TITLES = ['Archetype', 'Neighborhood', 'Cyberware', 'Traits', 'Record', 'Equipment', 'Background', 'Experiences', 'Domain cards', 'Connections', 'Level 2'];
+  const STEP_TITLES = ['Archetype', 'Neighborhood', 'Cyberware', 'Traits', 'Record', 'Equipment', 'Background', 'Experiences', 'Domain cards', 'Connections', 'Level 2', 'Level 3'];
 
   // ---------------------------------------------------------------- state
   function fresh() {
     return { step: 1, name: '', pronouns: '', description: '', cls: null, sub: null, top: null, bottom: null, nochrome: false,
       community: null, traits: {}, primary: null, secondary: null, armor: null, potion: null,
       background: {}, experiences: ['', ''], cards: [], connections: {},
-      lvl2: { started: false, exp3: '', adv: [], traits: [], expBonus: [], cardAdv: null, cardNew: null } };
+      lvl2: { started: false, exp3: '', adv: [], traits: [], expBonus: [], cardAdv: null, cardNew: null },
+      lvl3: { started: false, adv: [], traits: [], expBonus: [], cardAdv: null, cardNew: null } };
   }
   let st = fresh();
   try { const s = localStorage.getItem(KEY); if (s) st = Object.assign(fresh(), JSON.parse(s)); } catch (e) { /* storage unavailable */ }
   st.lvl2 = Object.assign(fresh().lvl2, st.lvl2 || {});
+  st.lvl3 = Object.assign(fresh().lvl3, st.lvl3 || {});
   if (st.cls && st.sub && !(D.classes.find((c) => c.name === st.cls) || { subclasses: [] }).subclasses.some((x) => x.name === st.sub)) { st.sub = null; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* ignore */ } }
 
@@ -39,15 +41,20 @@
     { id: 'evasion', slots: 1, text: 'Permanently gain a +1 bonus to your Evasion.' },
   ];
   const L2 = () => st.lvl2 || {};
-  const level = () => (L2().started ? 2 : 1);
-  const advCount = (id) => L2().adv.filter((a) => a === id).length;
-  const traitMod = (name) => { const b = st.traits[name]; if (b === undefined || b === null) return null; return b + (L2().started && L2().traits.includes(name) ? 1 : 0); };
+  const L3 = () => st.lvl3 || {};
+  const LV = (n) => (n === 3 ? L3() : L2());
+  const levels = () => [L2(), L3()].filter((l) => l.started);
+  const level = () => (L3().started ? 3 : L2().started ? 2 : 1);
+  const advCount = (id, only) => (only ? [only] : levels()).reduce((n, l) => n + l.adv.filter((a) => a === id).length, 0);
+  const traitMarked = (name) => levels().some((l) => l.traits.includes(name));
+  const traitMod = (name) => { const b = st.traits[name]; if (b === undefined || b === null) return null; return b + levels().filter((l) => l.traits.includes(name)).length; };
+  const expBonus = (i) => levels().reduce((n, l) => n + l.expBonus.filter((x) => x === i).length, 0);
   const experiences = () => {
-    const xs = st.experiences.map((e, i) => ({ name: e, mod: 2 + (L2().started && L2().expBonus.includes(i) ? 1 : 0) }));
-    if (L2().started) xs.push({ name: L2().exp3, mod: 2 + (L2().expBonus.includes(2) ? 1 : 0) });
+    const xs = st.experiences.map((e, i) => ({ name: e, mod: 2 + expBonus(i) }));
+    if (L2().started) xs.push({ name: L2().exp3, mod: 2 + expBonus(2) });
     return xs.filter((x) => x.name && x.name.trim());
   };
-  const allCards = () => st.cards.concat(L2().started ? [L2().cardAdv, L2().cardNew] : []).filter(Boolean).map((n) => D.domain_cards.find((c) => c.name === n)).filter(Boolean);
+  const allCards = () => st.cards.concat(...levels().map((l) => [l.cardAdv, l.cardNew])).filter(Boolean).map((n) => D.domain_cards.find((c) => c.name === n)).filter(Boolean);
 
   function derived() {
     const c = cls(), a = armor();
@@ -55,9 +62,9 @@
     const lv = level(), l2 = L2().started;
     return {
       level: lv,
-      evasion: c ? c.evasion + evBonus + (l2 ? advCount('evasion') : 0) : null,
-      hp: c ? c.hp + (l2 ? advCount('hp') : 0) : null,
-      stress: 6 + (l2 ? advCount('stress') : 0), hope: 2, proficiency: l2 ? 2 : 1,
+      evasion: c ? c.evasion + evBonus + advCount('evasion') : null,
+      hp: c ? c.hp + advCount('hp') : null,
+      stress: 6 + advCount('stress'), hope: 2, proficiency: l2 ? 2 : 1,
       armorScore: a ? a.score : null,
       major: a ? a.major + lv : null,
       severe: a ? a.severe + lv : null,
@@ -68,6 +75,15 @@
     if (vals.some((v) => v === undefined || v === null)) return false;
     const pool = D.modifiers.slice().sort(), got = vals.slice().sort();
     return pool.join(',') === got.join(',');
+  }
+  function levelDone(n) {
+    const l = LV(n);
+    if (!l.started || l.adv.length !== 2 || !l.cardNew) return false;
+    if (n === 2 && !(l.exp3 && l.exp3.trim())) return false;
+    if (advCount('traits', l) && l.traits.length !== 2 * advCount('traits', l)) return false;
+    if (advCount('exp', l) && l.expBonus.length !== 2 * advCount('exp', l)) return false;
+    if (advCount('card', l) && !l.cardAdv) return false;
+    return true;
   }
   function stepDone(n) {
     switch (n) {
@@ -81,14 +97,8 @@
       case 8: return st.experiences.every((e) => e && e.trim());
       case 9: return cards().length === 2;
       case 10: return true;
-      case 11: {
-        const l = L2();
-        if (!l.started || !(l.exp3 && l.exp3.trim()) || l.adv.length !== 2 || !l.cardNew) return false;
-        if (advCount('traits') && l.traits.length !== 2 * advCount('traits')) return false;
-        if (advCount('exp') && l.expBonus.length !== 2 * advCount('exp')) return false;
-        if (advCount('card') && !l.cardAdv) return false;
-        return true;
-      }
+      case 11: return levelDone(2);
+      case 12: return levelDone(3);
     }
     return false;
   }
@@ -396,50 +406,53 @@
     box.appendChild(panel('Connections', c ? 'ask another player' : null, kids));
   }
 
-  function step11(box) {
-    const l = L2();
+  function levelUp(box, n) {
+    const l = LV(n);
+    if (n === 3 && !L2().started) { box.appendChild(hint('Finish level 2 first.', true)); return; }
     if (!l.started) { l.started = true; save(); side(); }
     const c = cls();
-    // 1. level achievement
-    box.appendChild(panel('Level 2 — level achievement', 'the campaign starts here', [
-      hint('At level 2, you gain an additional Experience and add it to your character sheet with a modifier of +2. You also gain a permanent +1 bonus to your Proficiency.'),
-      field('Experience 3 (+2)', l.exp3, (v) => { l.exp3 = v; save(); side(); }),
-      hint('Proficiency is now <b>2</b> — roll two damage dice. Damage thresholds rise by +1 with your level; the sheet already shows it.'),
-    ]));
-    // 2. two advancements
+    if (n === 2) {
+      box.appendChild(panel('Level 2 — level achievement', null, [
+        hint('At level 2, you gain an additional Experience and add it to your character sheet with a modifier of +2. You also gain a permanent +1 bonus to your Proficiency.'),
+        field('Experience 3 (+2)', l.exp3, (v) => { l.exp3 = v; save(); side(); }),
+        hint('Proficiency is now <b>2</b> — roll two damage dice. Damage thresholds rise by +1 with your level; the sheet already shows it.'),
+      ]));
+    } else {
+      box.appendChild(panel('Level 3', 'the campaign starts here', [hint('No level achievement at level 3 — those come at 2, 5 and 8. Damage thresholds rise by +1 with your level; the sheet already shows it.')]));
+    }
     const used = l.adv.length;
     const grid = el('div', { class: 'opts wide' });
     for (const a of ADV) {
-      const n = advCount(a.id);
-      const can = used < 2 && n < a.slots;
-      const b = opt(a.text, n > 0, () => {
-        if (n > 0 && !(can && a.slots > 1 && n < a.slots && used < 2)) { l.adv = l.adv.filter((x) => x !== a.id); if (a.id === 'traits') l.traits = []; if (a.id === 'exp') l.expBonus = []; if (a.id === 'card') l.cardAdv = null; }
+      const mine = advCount(a.id, l), tier = advCount(a.id);
+      const can = used < 2 && tier < a.slots;
+      const b = opt(a.text, mine > 0, () => {
+        if (mine > 0 && !(can && a.slots > 1)) { l.adv = l.adv.filter((x) => x !== a.id); if (a.id === 'traits') l.traits = []; if (a.id === 'exp') l.expBonus = []; if (a.id === 'card') l.cardAdv = null; }
         else if (can) l.adv.push(a.id);
         save(); redraw();
-      }, { meta: a.slots + (a.slots > 1 ? ' slots' : ' slot') + (n ? ' · taken ×' + n : '') });
-      if (!n && !can) b.disabled = true;
+      }, { meta: a.slots + (a.slots > 1 ? ' slots' : ' slot') + ' this tier' + (tier ? ' · ' + tier + ' used' : '') + (mine ? ' · taken at level ' + n + (mine > 1 ? ' ×' + mine : '') : '') });
+      if (!mine && !can) b.disabled = true;
       grid.appendChild(b);
     }
-    box.appendChild(panel('Choose two advancements', used + ' of 2 chosen', [hint('Choose two options from the list below and mark them. Taking the same option twice uses two of its slots.'), grid]));
-    // 3. substeps per pick
-    if (advCount('traits')) {
-      const want = 2 * advCount('traits');
+    box.appendChild(panel('Choose two advancements', used + ' of 2 chosen', [hint('Choose two options from the list below and mark them. Slots are shared across levels 2–4; taking the same option twice uses two of them.'), grid]));
+    if (advCount('traits', l)) {
+      const want = 2 * advCount('traits', l);
       const g = el('div', { class: 'opts' });
       for (const t of D.traits) {
         const on = l.traits.includes(t.name);
-        const b = opt(t.name, on, () => { l.traits = on ? l.traits.filter((x) => x !== t.name) : l.traits.concat(t.name); save(); redraw(); }, { meta: 'now ' + fmtMod(st.traits[t.name]) + (on ? ' → ' + fmtMod(traitMod(t.name)) : '') });
-        if (!on && l.traits.length >= want) b.disabled = true;
+        const lockedElsewhere = !on && levels().some((x) => x !== l && x.traits.includes(t.name));
+        const b = opt(t.name, on, () => { l.traits = on ? l.traits.filter((x) => x !== t.name) : l.traits.concat(t.name); save(); redraw(); }, { meta: lockedElsewhere ? 'already marked' : 'now ' + fmtMod(traitMod(t.name) - (on ? 1 : 0)) + (on ? ' → ' + fmtMod(traitMod(t.name)) : '') });
+        if (lockedElsewhere || (!on && l.traits.length >= want)) b.disabled = true;
         g.appendChild(b);
       }
-      box.appendChild(panel('Traits +1', l.traits.length + ' of ' + want + ' — these are marked until level 5', [g]));
+      box.appendChild(panel('Traits +1', l.traits.length + ' of ' + want + ' — unmarked traits only; marks clear at level 5', [g]));
     }
-    if (advCount('exp')) {
-      const want = 2 * advCount('exp');
-      const xs = [st.experiences[0], st.experiences[1], l.exp3];
+    if (advCount('exp', l)) {
+      const want = 2 * advCount('exp', l);
+      const xs = [st.experiences[0], st.experiences[1], L2().exp3];
       const g = el('div', { class: 'opts' });
       xs.forEach((name, i) => {
         const on = l.expBonus.includes(i);
-        const b = opt(name || '(Experience ' + (i + 1) + ' — not named yet)', on, () => { l.expBonus = on ? l.expBonus.filter((x) => x !== i) : l.expBonus.concat(i); save(); redraw(); }, { meta: on ? '+3' : '+2' });
+        const b = opt(name || '(Experience ' + (i + 1) + ' — not named yet)', on, () => { l.expBonus = on ? l.expBonus.filter((x) => x !== i) : l.expBonus.concat(i); save(); redraw(); }, { meta: '+' + (2 + expBonus(i)) + (on ? '' : ' → +' + (3 + expBonus(i))) });
         if (!on && l.expBonus.length >= want) b.disabled = true;
         g.appendChild(b);
       });
@@ -448,7 +461,7 @@
     const cardPick = (key, title, small) => {
       const g = el('div', { class: 'opts wide' });
       const taken = allCards().map((k) => k.name);
-      for (const card of classCards().filter((x) => x.level <= 2)) {
+      for (const card of classCards().filter((x) => x.level <= n)) {
         const on = l[key] === card.name;
         const b = opt(card.name, on, () => { l[key] = on ? null : card.name; save(); redraw(); }, { meta: 'level ' + card.level + ' · ' + card.type + ' · recall ' + card.recall, text: card.text, was: card.was, cls: card.converted ? '' : 'unmapped' });
         b.insertBefore(el('span', { class: 'dchip sm ' + domClass(card.domain) }, card.domain), b.firstChild);
@@ -457,16 +470,18 @@
       }
       return panel(title, small, [g]);
     };
-    if (advCount('card')) box.appendChild(cardPick('cardAdv', 'Additional domain card', 'from the advancement — level 2 or lower'));
-    // 4. the level's own card
-    if (c) box.appendChild(cardPick('cardNew', 'New domain card', 'every level — level 2 or lower'));
-    // finish
-    const missing = STEP_TITLES.map((t, i) => (stepDone(i + 1) ? null : (i + 1) + '. ' + t)).filter(Boolean);
-    box.appendChild(panel('Finish', null, [missing.length ? hint('Still open: ' + missing.join(' · '), true) : hint('Everything is filled in. Export the JSON for the GM, or print the sheet.'),
-      el('div', { class: 'sheet-acts' }, [el('button', { class: 'btn', type: 'button', onclick: exportJson }, 'Export JSON'), el('button', { class: 'btn cyan', type: 'button', onclick: () => window.print() }, 'Print sheet')])]));
+    if (advCount('card', l)) box.appendChild(cardPick('cardAdv', 'Additional domain card', 'from the advancement — level ' + n + ' or lower'));
+    if (c) box.appendChild(cardPick('cardNew', 'New domain card', 'every level — level ' + n + ' or lower'));
+    if (n === 3) {
+      const missing = STEP_TITLES.map((t, i) => (stepDone(i + 1) ? null : (i + 1) + '. ' + t)).filter(Boolean);
+      box.appendChild(panel('Finish', null, [missing.length ? hint('Still open: ' + missing.join(' · '), true) : hint('Everything is filled in. Export the JSON for the GM, or print the sheet.'),
+        el('div', { class: 'sheet-acts' }, [el('button', { class: 'btn', type: 'button', onclick: exportJson }, 'Export JSON'), el('button', { class: 'btn cyan', type: 'button', onclick: () => window.print() }, 'Print sheet')])]));
+    }
   }
+  function step11(box) { levelUp(box, 2); }
+  function step12(box) { levelUp(box, 3); }
 
-  const STEPS = [step1, step2, step3, step4, step5, step6, step7, step8, step9, step10, step11];
+  const STEPS = [step1, step2, step3, step4, step5, step6, step7, step8, step9, step10, step11, step12];
 
   // ---------------------------------------------------------------- export / import / print
   function exportJson() {
@@ -514,26 +529,31 @@
       el('h2', {}, st.name || 'Unnamed'),
       el('p', { class: 'sub' }, [st.pronouns, s && s.name, 'level ' + level()].filter(Boolean).join(' · ')),
       el('div', { class: 'stats' }, [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresholds', d.major != null ? d.major + ' / ' + d.severe : null], ['Proficiency', d.proficiency], ['Level', d.level]].map(([k, v]) => el('div', { class: 'stat' }, [el('b', {}, v == null ? '—' : String(v)), el('span', {}, k)]))),
-      el('div', { class: 'tr6' }, D.traits.map((t) => el('div', { class: 'stat' + (L2().started && L2().traits.includes(t.name) ? ' marked' : '') }, [el('b', {}, fmtMod(traitMod(t.name))), el('span', {}, t.name)]))),
+      el('div', { class: 'tr6' }, D.traits.map((t) => el('div', { class: 'stat' + (traitMarked(t.name) ? ' marked' : '') }, [el('b', {}, fmtMod(traitMod(t.name))), el('span', {}, t.name)]))),
       (function () {
         const fs = [].concat(s ? s.foundation.map((f) => Object.assign({ from: s.name + ' · foundation' }, f)) : [], c && s ? c.features.map((f) => Object.assign({ from: s.name }, f)) : []);
         const ch = ['top', 'bottom'].map(chrome).filter(Boolean).map((x) => Object.assign({ from: x.slot + ' slot' }, x));
         const cm = co ? [Object.assign({ from: 'community' }, co)] : [];
         const dc = allCards().map((k) => Object.assign({ from: k.domain + ' · ' + k.type.toLowerCase() + ' · recall ' + k.recall, cls: domClass(k.domain) }, k));
-        if (!fs.length && !ch.length && !cm.length && !dc.length) return null;
+        if (!fs.length && !ch.length && !cm.length && !dc.length && !st.primary && !st.armor && !experiences().length) return null;
         const item = (f, open) => el('details', { class: 'sfeat' + (f.cls ? ' ' + f.cls : ''), open }, [el('summary', {}, [f.name, el('i', {}, f.from)]), el('div', { class: 'tx', html: md(f.text) })]);
         const kids = [];
         if (fs.length) kids.push(el('h3', {}, 'Features'), ...fs.map((f) => item(f, true)));       // class + subclass: open, click to close
         if (ch.length) kids.push(el('h3', {}, 'Chrome'), ...ch.map((f) => item(f, false)));        // implants: click to expand
         if (cm.length) kids.push(el('h3', {}, 'Community'), ...cm.map((f) => item(f, false)));
         if (dc.length) kids.push(el('h3', {}, 'Domain cards'), ...dc.map((f) => item(f, false)));   // coloured by domain, click to expand
+        const sitem = (name, tag, line) => el('div', { class: 'sitem' }, [el('div', { class: 'sm' }, [name, el('i', {}, tag)]), line ? el('div', { class: 'ln' }, line) : null]);
+        const d = derived();
+        const ws = [['primary', weapon(st.primary)], ['secondary', weapon(st.secondary)]].filter((x) => x[1]);
+        if (ws.length) kids.push(el('h3', {}, 'Weapons'), ...ws.map(([slot, w]) => sitem(w.name, slot, w.trait + ' · ' + w.range + ' · ' + d.proficiency + w.damage.replace(/^d/, 'd') + ' · ' + w.burden.toLowerCase() + (w.feature ? ' · ' + w.feature : ''))));
+        const ar = armor();
+        if (ar) kids.push(el('h3', {}, 'Armor'), sitem(ar.name, 'armor score ' + ar.score, 'thresholds ' + d.major + ' / ' + d.severe + ' (base ' + ar.major + ' / ' + ar.severe + ' + level ' + d.level + ')' + (ar.feature ? ' · ' + ar.feature : '')));
+        const xs = experiences();
+        if (xs.length) kids.push(el('h3', {}, 'Experiences'), ...xs.map((x) => sitem(x.name, '+' + x.mod, null)));
         return el('div', { class: 'sfeats' }, kids);
       })(),
       el('dl', {}, [
         st.nochrome ? el('dt', {}, 'Chrome') : null, st.nochrome ? dd('none (by choice)') : null,
-        el('dt', {}, 'Weapons'), dd([st.primary, st.secondary].filter(Boolean).join(' · ')),
-        el('dt', {}, 'Armor'), dd(st.armor),
-        el('dt', {}, 'Experiences'), dd(experiences().map((x) => x.name + ' +' + x.mod).join(' · ')),
       ]),
       el('div', { class: 'sheet-acts' }, [
         el('button', { class: 'btn', type: 'button', onclick: exportJson }, 'Export'),

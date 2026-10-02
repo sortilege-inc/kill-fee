@@ -24,7 +24,7 @@ yellow band on the masthead.
 | `lore/` | How the city works. **Empty** |
 | `table/` | Player-facing: principles, Session 0, character options. **Empty until the remap is done** |
 | `gm/` | **Behind the Blackwall** — campaign frame, the remap workbench, the **Card Tracker** (generated from the Daggerheart corpus on every build: all 210 domain cards, converted or not), character menus, the plot, session outline, factions, locations, campaign state, next session |
-| `builder/` | **Character Builder** (player-facing, level 1): the book's nine steps in Night City terms — step 1 is a single pick from 26 archetypes (`../kill-fee-support/content/archetypes.json`: class + subclass under a Night City name, with trope examples), live sheet, saves in the browser, Export/Import JSON, Print. `data.js` is generated from the Daggerheart corpus + the card sidecars through the term map; the page itself lives in `../kill-fee-support/build/builder/` |
+| `builder/` | **Character Builder** (player-facing, level 1): the book's nine steps in Night City terms — twelve steps — step 1 is a single pick from 26 archetypes, steps 11–12 are the level 2 and 3 level-ups (the campaign starts at 3) (`../kill-fee-support/content/archetypes.json`: class + subclass under a Night City name, with trope examples), live sheet, saves in the browser, Export/Import JSON, Print. `data.js` is generated from the Daggerheart corpus + the card sidecars through the term map; the page itself lives in `../kill-fee-support/build/builder/` |
 | `edgerunners.css` | The theme |
 
 **The remap is the gate.** `gm/daggerheart-remap.html` is the GM's workbench for turning

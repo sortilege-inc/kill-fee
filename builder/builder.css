@@ -220,3 +220,9 @@ details.step-text .book{ padding:0 1.1rem 0.8rem; font-size:0.9rem; line-height:
 
 .stat.marked b::after{ content:" ●"; font-size:0.5em; color:var(--ochre); vertical-align:top; }
 .stats{ grid-template-columns:repeat(4,1fr); }
+
+/* static sheet items (weapons, armor, experiences) */
+.sitem{ margin:0 0 0.4rem; border:1px solid var(--edge-soft); background:var(--stone); padding:0.35rem 0.55rem; }
+.sitem .sm{ font-family:var(--caps); font-weight:700; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--sand-lit); display:flex; justify-content:space-between; gap:0.5rem; }
+.sitem .sm i{ font-family:var(--type); font-style:normal; font-size:0.55rem; letter-spacing:0.08em; color:var(--essentia); text-transform:uppercase; }
+.sitem .ln{ font-family:var(--type); font-size:0.62rem; letter-spacing:0.04em; color:var(--bone-2); margin-top:0.2rem; line-height:1.4; }
