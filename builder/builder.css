@@ -199,3 +199,24 @@ details.step-text .book{ padding:0 1.1rem 0.8rem; font-size:0.9rem; line-height:
 .rec .rv.primary{ border-color:var(--ochre); color:var(--sand-lit); }
 .rec .rv.secondary{ border-color:var(--ochre-soft); }
 .rec .btn{ margin-left:auto; }
+
+.tab.dom-arcana.on{ color:var(--dom-arcana); } .tab.dom-blade.on{ color:var(--dom-blade); } .tab.dom-bone.on{ color:var(--dom-bone); } .tab.dom-codex.on{ color:var(--dom-codex); }
+.tab.dom-grace.on{ color:var(--dom-grace); } .tab.dom-midnight.on{ color:var(--dom-midnight); } .tab.dom-sage.on{ color:var(--dom-sage); } .tab.dom-splendor.on{ color:var(--dom-splendor); }
+.tab.dom-valor.on{ color:var(--dom-valor); } .tab.dom-dread.on{ color:var(--dom-dread); }
+
+/* domain cards on the sheet take their domain's colour */
+.sfeat[class*="dom-"]{ border-left:3px solid var(--edge); }
+.sfeat[class*="dom-"] summary i{ color:inherit; }
+.sfeat.dom-arcana{ border-left-color:var(--dom-arcana); } .sfeat.dom-arcana summary{ color:var(--dom-arcana); }
+.sfeat.dom-blade{ border-left-color:var(--dom-blade); } .sfeat.dom-blade summary{ color:var(--dom-blade); }
+.sfeat.dom-bone{ border-left-color:var(--dom-bone); } .sfeat.dom-bone summary{ color:var(--dom-bone); }
+.sfeat.dom-codex{ border-left-color:var(--dom-codex); } .sfeat.dom-codex summary{ color:var(--dom-codex); }
+.sfeat.dom-grace{ border-left-color:var(--dom-grace); } .sfeat.dom-grace summary{ color:var(--dom-grace); }
+.sfeat.dom-midnight{ border-left-color:var(--dom-midnight); } .sfeat.dom-midnight summary{ color:var(--dom-midnight); }
+.sfeat.dom-sage{ border-left-color:var(--dom-sage); } .sfeat.dom-sage summary{ color:var(--dom-sage); }
+.sfeat.dom-splendor{ border-left-color:var(--dom-splendor); } .sfeat.dom-splendor summary{ color:var(--dom-splendor); }
+.sfeat.dom-valor{ border-left-color:var(--dom-valor); } .sfeat.dom-valor summary{ color:var(--dom-valor); }
+.sfeat.dom-dread{ border-left-color:var(--dom-dread); } .sfeat.dom-dread summary{ color:var(--dom-dread); }
+
+.stat.marked b::after{ content:" ●"; font-size:0.5em; color:var(--ochre); vertical-align:top; }
+.stats{ grid-template-columns:repeat(4,1fr); }

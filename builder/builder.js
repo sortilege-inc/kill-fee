@@ -5,16 +5,18 @@
   const D = window.KF_DATA;
   const KEY = 'kf-builder-v1';
   const LEVEL = D.level || 1;
-  const STEP_TITLES = ['Archetype', 'Neighborhood', 'Cyberware', 'Traits', 'Record', 'Equipment', 'Background', 'Experiences', 'Domain cards', 'Connections'];
+  const STEP_TITLES = ['Archetype', 'Neighborhood', 'Cyberware', 'Traits', 'Record', 'Equipment', 'Background', 'Experiences', 'Domain cards', 'Connections', 'Level 2'];
 
   // ---------------------------------------------------------------- state
   function fresh() {
     return { step: 1, name: '', pronouns: '', description: '', cls: null, sub: null, top: null, bottom: null, nochrome: false,
       community: null, traits: {}, primary: null, secondary: null, armor: null, potion: null,
-      background: {}, experiences: ['', ''], cards: [], connections: {} };
+      background: {}, experiences: ['', ''], cards: [], connections: {},
+      lvl2: { started: false, exp3: '', adv: [], traits: [], expBonus: [], cardAdv: null, cardNew: null } };
   }
   let st = fresh();
   try { const s = localStorage.getItem(KEY); if (s) st = Object.assign(fresh(), JSON.parse(s)); } catch (e) { /* storage unavailable */ }
+  st.lvl2 = Object.assign(fresh().lvl2, st.lvl2 || {});
   if (st.cls && st.sub && !(D.classes.find((c) => c.name === st.cls) || { subclasses: [] }).subclasses.some((x) => x.name === st.sub)) { st.sub = null; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* ignore */ } }
 
@@ -28,16 +30,37 @@
   const cards = () => st.cards.map((n) => D.domain_cards.find((c) => c.name === n)).filter(Boolean);
   const classCards = () => { const c = cls(); return c ? D.domain_cards.filter((x) => c.domains.includes(x.domain)) : []; };
 
+  const ADV = [
+    { id: 'traits', slots: 3, text: 'Gain a +1 bonus to two unmarked character traits and mark them.' },
+    { id: 'hp', slots: 2, text: 'Permanently gain one Hit Point slot.' },
+    { id: 'stress', slots: 2, text: 'Permanently gain one Stress slot.' },
+    { id: 'exp', slots: 2, text: 'Permanently gain a +1 bonus to two Experiences.' },
+    { id: 'card', slots: 1, text: 'Choose an additional domain card of your level or lower from a domain you have access to (up to level 4).' },
+    { id: 'evasion', slots: 1, text: 'Permanently gain a +1 bonus to your Evasion.' },
+  ];
+  const L2 = () => st.lvl2 || {};
+  const level = () => (L2().started ? 2 : 1);
+  const advCount = (id) => L2().adv.filter((a) => a === id).length;
+  const traitMod = (name) => { const b = st.traits[name]; if (b === undefined || b === null) return null; return b + (L2().started && L2().traits.includes(name) ? 1 : 0); };
+  const experiences = () => {
+    const xs = st.experiences.map((e, i) => ({ name: e, mod: 2 + (L2().started && L2().expBonus.includes(i) ? 1 : 0) }));
+    if (L2().started) xs.push({ name: L2().exp3, mod: 2 + (L2().expBonus.includes(2) ? 1 : 0) });
+    return xs.filter((x) => x.name && x.name.trim());
+  };
+  const allCards = () => st.cards.concat(L2().started ? [L2().cardAdv, L2().cardNew] : []).filter(Boolean).map((n) => D.domain_cards.find((c) => c.name === n)).filter(Boolean);
+
   function derived() {
     const c = cls(), a = armor();
     const evBonus = a && /\+(\d+) to Evasion/.test(a.feature || '') ? +RegExp.$1 : 0;
+    const lv = level(), l2 = L2().started;
     return {
-      evasion: c ? c.evasion + evBonus : null,
-      hp: c ? c.hp : null,
-      stress: 6, hope: 2, proficiency: 1,
+      level: lv,
+      evasion: c ? c.evasion + evBonus + (l2 ? advCount('evasion') : 0) : null,
+      hp: c ? c.hp + (l2 ? advCount('hp') : 0) : null,
+      stress: 6 + (l2 ? advCount('stress') : 0), hope: 2, proficiency: l2 ? 2 : 1,
       armorScore: a ? a.score : null,
-      major: a ? a.major + LEVEL : null,
-      severe: a ? a.severe + LEVEL : null,
+      major: a ? a.major + lv : null,
+      severe: a ? a.severe + lv : null,
     };
   }
   function traitsOk() {
@@ -57,7 +80,15 @@
       case 7: return !!st.name;
       case 8: return st.experiences.every((e) => e && e.trim());
       case 9: return cards().length === 2;
-      case 10: return [1, 2, 3, 4, 5, 6, 7, 8, 9].every(stepDone);
+      case 10: return true;
+      case 11: {
+        const l = L2();
+        if (!l.started || !(l.exp3 && l.exp3.trim()) || l.adv.length !== 2 || !l.cardNew) return false;
+        if (advCount('traits') && l.traits.length !== 2 * advCount('traits')) return false;
+        if (advCount('exp') && l.expBonus.length !== 2 * advCount('exp')) return false;
+        if (advCount('card') && !l.cardAdv) return false;
+        return true;
+      }
     }
     return false;
   }
@@ -105,12 +136,18 @@
     inp.value = value || '';
     return el('div', { class: 'field' }, [el('label', {}, label), inp]);
   }
+  function tabbar(key, tabs, dflt) {
+    // tabs: [{id, label, sub, cls}] — st[key] holds the active id
+    if (!tabs.some((t) => t.id === st[key])) st[key] = dflt || tabs[0].id;
+    return el('div', { class: 'tabs' }, tabs.map((t) => el('button', { type: 'button', class: 'tab' + (st[key] === t.id ? ' on' : '') + (t.done ? ' done' : '') + (t.cls ? ' ' + t.cls : ''), onclick: () => { st[key] = t.id; save(); redraw(); } },
+      [t.label, t.sub !== undefined ? el('i', {}, t.sub) : null])));
+  }
   function panel(title, small, kids) {
     const h = el('h2', {}, title);
     if (small) h.appendChild(el('small', {}, small));
     return el('div', { class: 'bpanel' }, [h].concat(kids || []));
   }
-  const hint = (t, warn) => el('p', { class: 'hint' + (warn ? ' warn' : ''), html: inline(t) });
+  const hint = (t, warn) => el('p', { class: 'hint' + (warn ? ' warn' : ''), html: inline(t).replace(/&lt;(\/?[bi])&gt;/g, '<$1>') });  // allow <b>/<i> in hints
   const featList = (fs) => el('div', { class: 'feat', html: fs.map((f) => '<p><b>' + esc(f.name) + ':</b> ' + md(f.text).replace(/^<p>|<\/p>$/g, '') + '</p>').join('') });
 
   // ---------------------------------------------------------------- steps
@@ -297,15 +334,26 @@
         el('button', { type: 'button', class: 'btn' + (matches ? ' ghost' : ''), onclick: () => { if (g.primary) st.primary = g.primary; st.secondary = g.secondary || null; if (g.armor) st.armor = g.armor; save(); redraw(); } }, matches ? 'Applied' : 'Use these'),
       ]));
     }
-    box.appendChild(panel('Primary weapon', 'two-handed, or one-handed plus a secondary', [mk(D.equipment.weapons.filter((w) => w.category === 'Primary'), 'primary')]));
-    box.appendChild(panel('Secondary weapon', twoH ? 'not with a two-handed primary' : 'one-handed primary only', [mk(D.equipment.weapons.filter((w) => w.category === 'Secondary'), 'secondary', twoH)]));
-    const ag = el('div', { class: 'opts' });
-    for (const a of D.equipment.armor) ag.appendChild(opt(a.name, st.armor === a.name, () => { st.armor = a.name; save(); redraw(); }, { meta: 'Thresholds ' + a.major + ' / ' + a.severe + ' · Armor Score ' + a.score, text: a.feature || '', was: a.was }));
-    box.appendChild(panel('Armor', 'thresholds shown are base; your level is added on the sheet', [ag]));
-    const pg = el('div', { class: 'opts' });
-    for (const p of ['Minor Health Potion (clear 1d4 Hit Points)', 'Minor Stamina Potion (clear 1d4 Stress)']) pg.appendChild(opt(p, st.potion === p, () => { st.potion = p; save(); redraw(); }, { cls: 'unmapped' }));
     const c = cls();
-    box.appendChild(panel('Other starting items', null, [pg, c ? hint('Class items: <b>' + esc(c.class_items) + '</b>') : null, hint('Plus the basics — rope, supplies, a handful of eddies. The GM will say what that looks like in Night City.')]));
+    const tabs = tabbar('gearTab', [
+      { id: 'primary', label: 'Primary', sub: st.primary || 'none picked', done: !!st.primary },
+      { id: 'secondary', label: 'Secondary', sub: twoH ? 'not with a two-handed primary' : (st.secondary || 'none picked'), done: !!st.secondary },
+      { id: 'armor', label: 'Armor', sub: st.armor || 'none picked', done: !!st.armor },
+      { id: 'other', label: 'Other', sub: st.potion ? st.potion.split(' (')[0] : 'none picked', done: !!st.potion },
+    ]);
+    const body = [];
+    if (st.gearTab === 'primary') body.push(hint('Two-handed, or one-handed plus a secondary.'), mk(D.equipment.weapons.filter((w) => w.category === 'Primary'), 'primary'));
+    else if (st.gearTab === 'secondary') body.push(hint(twoH ? 'Your primary is two-handed — no secondary.' : 'One-handed primary only.'), mk(D.equipment.weapons.filter((w) => w.category === 'Secondary'), 'secondary', twoH));
+    else if (st.gearTab === 'armor') {
+      const ag = el('div', { class: 'opts' });
+      for (const a of D.equipment.armor) ag.appendChild(opt(a.name, st.armor === a.name, () => { st.armor = a.name; save(); redraw(); }, { meta: 'Thresholds ' + a.major + ' / ' + a.severe + ' · Armor Score ' + a.score, text: a.feature || '', was: a.was }));
+      body.push(hint('Thresholds shown are base; your level is added on the sheet.'), ag);
+    } else {
+      const pg = el('div', { class: 'opts' });
+      for (const p of ['Minor Health Potion (clear 1d4 Hit Points)', 'Minor Stamina Potion (clear 1d4 Stress)']) pg.appendChild(opt(p, st.potion === p, () => { st.potion = p; save(); redraw(); }, { cls: 'unmapped' }));
+      body.push(hint('Pick one.'), pg, c ? hint('Class items: <b>' + esc(c.class_items) + '</b>') : null, hint('Plus the basics — rope, supplies, a handful of eddies. The GM will say what that looks like in Night City.'));
+    }
+    box.appendChild(panel('Equipment', null, [tabs].concat(body)));
   }
 
   function step7(box) {
@@ -326,9 +374,10 @@
 
   function step9(box) {
     const c = cls();
-    if (!c) { box.appendChild(hint('Pick a class first — your cards come from its two domains.', true)); return; }
+    if (!c) { box.appendChild(hint('Pick an archetype first — your cards come from its two domains.', true)); return; }
+    const tabs = tabbar('cardTab', c.domains.map((d) => ({ id: d, label: d, cls: domClass(d), sub: st.cards.filter((n) => (D.domain_cards.find((x) => x.name === n) || {}).domain === d).join(' · ') || 'none picked', done: st.cards.some((n) => (D.domain_cards.find((x) => x.name === n) || {}).domain === d) })));
     const g = el('div', { class: 'opts wide' });
-    for (const card of classCards()) {
+    for (const card of classCards().filter((x) => x.domain === st.cardTab && x.level === 1)) {
       const on = st.cards.includes(card.name);
       const b = opt(card.name, on, () => { if (on) st.cards = st.cards.filter((n) => n !== card.name); else if (st.cards.length < 2) st.cards.push(card.name); save(); redraw(); },
         { meta: 'level ' + card.level + ' · ' + card.type + ' · recall ' + card.recall, text: card.text, was: card.was, cls: card.converted ? '' : 'unmapped' });
@@ -336,24 +385,92 @@
       if (!on && st.cards.length >= 2) b.disabled = true;
       g.appendChild(b);
     }
-    box.appendChild(panel('Domain cards', c.domains.join(' + ') + ' · choose two', [hint('Converted cards carry their Night City name; the rest still show their original name with the renamed terms inside.'), g]));
+    box.appendChild(panel('Domain cards', 'choose two — one from each, or both from one', [hint('Converted cards carry their Night City name; the rest still show their original name with the renamed terms inside.'), tabs, g]));
   }
 
   function step10(box) {
     const c = cls();
     const kids = [];
     if (c) for (const q of c.connections) kids.push(field(q, st.connections[q], (v) => { st.connections[q] = v; save(); }, true));
-    else kids.push(hint('Pick a class to see its connection prompts.', true));
-    box.appendChild(panel('Connections', c ? c.name + ' prompts — ask another player' : null, kids));
-    const missing = STEP_TITLES.map((t, i) => (i + 1 === STEPS.length || stepDone(i + 1) ? null : (i + 1) + '. ' + t)).filter(Boolean);
+    else kids.push(hint('Pick an archetype to see its connection prompts.', true));
+    box.appendChild(panel('Connections', c ? 'ask another player' : null, kids));
+  }
+
+  function step11(box) {
+    const l = L2();
+    if (!l.started) { l.started = true; save(); side(); }
+    const c = cls();
+    // 1. level achievement
+    box.appendChild(panel('Level 2 — level achievement', 'the campaign starts here', [
+      hint('At level 2, you gain an additional Experience and add it to your character sheet with a modifier of +2. You also gain a permanent +1 bonus to your Proficiency.'),
+      field('Experience 3 (+2)', l.exp3, (v) => { l.exp3 = v; save(); side(); }),
+      hint('Proficiency is now <b>2</b> — roll two damage dice. Damage thresholds rise by +1 with your level; the sheet already shows it.'),
+    ]));
+    // 2. two advancements
+    const used = l.adv.length;
+    const grid = el('div', { class: 'opts wide' });
+    for (const a of ADV) {
+      const n = advCount(a.id);
+      const can = used < 2 && n < a.slots;
+      const b = opt(a.text, n > 0, () => {
+        if (n > 0 && !(can && a.slots > 1 && n < a.slots && used < 2)) { l.adv = l.adv.filter((x) => x !== a.id); if (a.id === 'traits') l.traits = []; if (a.id === 'exp') l.expBonus = []; if (a.id === 'card') l.cardAdv = null; }
+        else if (can) l.adv.push(a.id);
+        save(); redraw();
+      }, { meta: a.slots + (a.slots > 1 ? ' slots' : ' slot') + (n ? ' · taken ×' + n : '') });
+      if (!n && !can) b.disabled = true;
+      grid.appendChild(b);
+    }
+    box.appendChild(panel('Choose two advancements', used + ' of 2 chosen', [hint('Choose two options from the list below and mark them. Taking the same option twice uses two of its slots.'), grid]));
+    // 3. substeps per pick
+    if (advCount('traits')) {
+      const want = 2 * advCount('traits');
+      const g = el('div', { class: 'opts' });
+      for (const t of D.traits) {
+        const on = l.traits.includes(t.name);
+        const b = opt(t.name, on, () => { l.traits = on ? l.traits.filter((x) => x !== t.name) : l.traits.concat(t.name); save(); redraw(); }, { meta: 'now ' + fmtMod(st.traits[t.name]) + (on ? ' → ' + fmtMod(traitMod(t.name)) : '') });
+        if (!on && l.traits.length >= want) b.disabled = true;
+        g.appendChild(b);
+      }
+      box.appendChild(panel('Traits +1', l.traits.length + ' of ' + want + ' — these are marked until level 5', [g]));
+    }
+    if (advCount('exp')) {
+      const want = 2 * advCount('exp');
+      const xs = [st.experiences[0], st.experiences[1], l.exp3];
+      const g = el('div', { class: 'opts' });
+      xs.forEach((name, i) => {
+        const on = l.expBonus.includes(i);
+        const b = opt(name || '(Experience ' + (i + 1) + ' — not named yet)', on, () => { l.expBonus = on ? l.expBonus.filter((x) => x !== i) : l.expBonus.concat(i); save(); redraw(); }, { meta: on ? '+3' : '+2' });
+        if (!on && l.expBonus.length >= want) b.disabled = true;
+        g.appendChild(b);
+      });
+      box.appendChild(panel('Experiences +1', l.expBonus.length + ' of ' + want, [g]));
+    }
+    const cardPick = (key, title, small) => {
+      const g = el('div', { class: 'opts wide' });
+      const taken = allCards().map((k) => k.name);
+      for (const card of classCards().filter((x) => x.level <= 2)) {
+        const on = l[key] === card.name;
+        const b = opt(card.name, on, () => { l[key] = on ? null : card.name; save(); redraw(); }, { meta: 'level ' + card.level + ' · ' + card.type + ' · recall ' + card.recall, text: card.text, was: card.was, cls: card.converted ? '' : 'unmapped' });
+        b.insertBefore(el('span', { class: 'dchip sm ' + domClass(card.domain) }, card.domain), b.firstChild);
+        if (!on && taken.includes(card.name)) b.disabled = true;
+        g.appendChild(b);
+      }
+      return panel(title, small, [g]);
+    };
+    if (advCount('card')) box.appendChild(cardPick('cardAdv', 'Additional domain card', 'from the advancement — level 2 or lower'));
+    // 4. the level's own card
+    if (c) box.appendChild(cardPick('cardNew', 'New domain card', 'every level — level 2 or lower'));
+    // finish
+    const missing = STEP_TITLES.map((t, i) => (stepDone(i + 1) ? null : (i + 1) + '. ' + t)).filter(Boolean);
     box.appendChild(panel('Finish', null, [missing.length ? hint('Still open: ' + missing.join(' · '), true) : hint('Everything is filled in. Export the JSON for the GM, or print the sheet.'),
       el('div', { class: 'sheet-acts' }, [el('button', { class: 'btn', type: 'button', onclick: exportJson }, 'Export JSON'), el('button', { class: 'btn cyan', type: 'button', onclick: () => window.print() }, 'Print sheet')])]));
   }
-  const STEPS = [step1, step2, step3, step4, step5, step6, step7, step8, step9, step10];
+
+  const STEPS = [step1, step2, step3, step4, step5, step6, step7, step8, step9, step10, step11];
 
   // ---------------------------------------------------------------- export / import / print
   function exportJson() {
-    const blob = new Blob([JSON.stringify({ builder: 'kill-fee', version: 1, level: LEVEL, derived: derived(), character: st }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ builder: 'kill-fee', version: 2, level: level(), derived: derived(), experiences: experiences(), traits: Object.fromEntries(D.traits.map((t) => [t.name, traitMod(t.name)])), cards: allCards().map((k) => k.name), character: st }, null, 2)], { type: 'application/json' });
     const a = el('a', { href: URL.createObjectURL(blob), download: (st.name || 'character').replace(/[^\w-]+/g, '_') + '.json' });
     document.body.appendChild(a); a.click(); a.remove();
   }
@@ -366,16 +483,16 @@
     const d = derived(), c = cls(), s = sub(), co = community(), p = weapon(st.primary), sc = weapon(st.secondary), a = armor();
     const feats = [].concat(c ? c.features : [], s ? s.foundation : []);
     const h = [];
-    h.push('<h1>' + esc(st.name || 'Unnamed') + '</h1><p>' + esc([st.pronouns, s && s.name, 'Level ' + LEVEL].filter(Boolean).join(' · ')) + '</p>');
-    h.push('<div class="pstats">' + [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresholds', d.major != null ? d.major + ' / ' + d.severe : null]].map(([k, v]) => '<div>' + k + ' <b>' + (v == null ? '—' : v) + '</b></div>').join('') + '</div>');
-    h.push('<h2>Traits</h2><p>' + D.traits.map((t) => t.name + ' ' + fmtMod(st.traits[t.name])).join(' · ') + '</p>');
+    h.push('<h1>' + esc(st.name || 'Unnamed') + '</h1><p>' + esc([st.pronouns, s && s.name, 'Level ' + level()].filter(Boolean).join(' · ')) + '</p>');
+    h.push('<div class="pstats">' + [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Proficiency', d.proficiency], ['Armor', d.armorScore], ['Thresholds', d.major != null ? d.major + ' / ' + d.severe : null]].map(([k, v]) => '<div>' + k + ' <b>' + (v == null ? '—' : v) + '</b></div>').join('') + '</div>');
+    h.push('<h2>Traits</h2><p>' + D.traits.map((t) => t.name + ' ' + fmtMod(traitMod(t.name))).join(' · ') + '</p>');
     h.push('<h2>Heritage</h2><p>' + esc((co ? 'Community: ' + co.name : '') + (st.nochrome ? ' · No chrome' : (st.top || st.bottom ? ' · Chrome: ' + [st.top, st.bottom].filter(Boolean).join(', ') : ''))) + '</p>');
     if (co) h.push('<p>' + md(co.text) + '</p>');
     for (const slot of ['top', 'bottom']) { const ch = chrome(slot); if (ch) h.push('<p><b>' + esc(ch.name) + ':</b> ' + md(ch.text) + '</p>'); }
     h.push('<h2>Features</h2>' + feats.map((f) => '<p><b>' + esc(f.name) + ':</b> ' + md(f.text) + '</p>').join(''));
     h.push('<h2>Equipment</h2><p>' + esc([p && p.name + ' (' + p.damage + ', ' + p.range + ')', sc && sc.name + ' (' + sc.damage + ', ' + sc.range + ')', a && a.name, st.potion, c && c.class_items].filter(Boolean).join(' · ')) + '</p>');
-    h.push('<h2>Experiences</h2><p>' + esc(st.experiences.filter(Boolean).map((e) => e + ' +2').join(' · ')) + '</p>');
-    h.push('<h2>Domain cards</h2>' + cards().map((k) => '<p><b>' + esc(k.name) + '</b> (' + esc(k.domain) + ' ' + k.level + ', ' + esc(k.type) + ', recall ' + k.recall + '): ' + md(k.text) + '</p>').join(''));
+    h.push('<h2>Experiences</h2><p>' + esc(experiences().map((x) => x.name + ' +' + x.mod).join(' · ')) + '</p>');
+    h.push('<h2>Domain cards</h2>' + allCards().map((k) => '<p><b>' + esc(k.name) + '</b> (' + esc(k.domain) + ' ' + k.level + ', ' + esc(k.type) + ', recall ' + k.recall + '): ' + md(k.text) + '</p>').join(''));
     if (st.description) h.push('<h2>Description</h2><p>' + esc(st.description) + '</p>');
     const bq = Object.entries(st.background).filter(([, v]) => v); if (bq.length) h.push('<h2>Background</h2>' + bq.map(([q, v]) => '<p><i>' + esc(q) + '</i><br>' + esc(v) + '</p>').join(''));
     const cq = Object.entries(st.connections).filter(([, v]) => v); if (cq.length) h.push('<h2>Connections</h2>' + cq.map(([q, v]) => '<p><i>' + esc(q) + '</i><br>' + esc(v) + '</p>').join(''));
@@ -395,27 +512,28 @@
     const dd = (v) => el('dd', {}, v ? v : el('span', { class: 'none' }, 'not yet'));
     const sheet = el('div', { class: 'sheet' }, [
       el('h2', {}, st.name || 'Unnamed'),
-      el('p', { class: 'sub' }, [st.pronouns, s && s.name, 'level ' + LEVEL].filter(Boolean).join(' · ')),
-      el('div', { class: 'stats' }, [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresholds', d.major != null ? d.major + ' / ' + d.severe : null]].map(([k, v]) => el('div', { class: 'stat' }, [el('b', {}, v == null ? '—' : String(v)), el('span', {}, k)]))),
-      el('div', { class: 'tr6' }, D.traits.map((t) => el('div', { class: 'stat' }, [el('b', {}, fmtMod(st.traits[t.name])), el('span', {}, t.name)]))),
+      el('p', { class: 'sub' }, [st.pronouns, s && s.name, 'level ' + level()].filter(Boolean).join(' · ')),
+      el('div', { class: 'stats' }, [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresholds', d.major != null ? d.major + ' / ' + d.severe : null], ['Proficiency', d.proficiency], ['Level', d.level]].map(([k, v]) => el('div', { class: 'stat' }, [el('b', {}, v == null ? '—' : String(v)), el('span', {}, k)]))),
+      el('div', { class: 'tr6' }, D.traits.map((t) => el('div', { class: 'stat' + (L2().started && L2().traits.includes(t.name) ? ' marked' : '') }, [el('b', {}, fmtMod(traitMod(t.name))), el('span', {}, t.name)]))),
       (function () {
         const fs = [].concat(s ? s.foundation.map((f) => Object.assign({ from: s.name + ' · foundation' }, f)) : [], c && s ? c.features.map((f) => Object.assign({ from: s.name }, f)) : []);
         const ch = ['top', 'bottom'].map(chrome).filter(Boolean).map((x) => Object.assign({ from: x.slot + ' slot' }, x));
         const cm = co ? [Object.assign({ from: 'community' }, co)] : [];
-        if (!fs.length && !ch.length && !cm.length) return null;
-        const item = (f, open) => el('details', { class: 'sfeat', open }, [el('summary', {}, [f.name, el('i', {}, f.from)]), el('div', { class: 'tx', html: md(f.text) })]);
+        const dc = allCards().map((k) => Object.assign({ from: k.domain + ' · ' + k.type.toLowerCase() + ' · recall ' + k.recall, cls: domClass(k.domain) }, k));
+        if (!fs.length && !ch.length && !cm.length && !dc.length) return null;
+        const item = (f, open) => el('details', { class: 'sfeat' + (f.cls ? ' ' + f.cls : ''), open }, [el('summary', {}, [f.name, el('i', {}, f.from)]), el('div', { class: 'tx', html: md(f.text) })]);
         const kids = [];
         if (fs.length) kids.push(el('h3', {}, 'Features'), ...fs.map((f) => item(f, true)));       // class + subclass: open, click to close
         if (ch.length) kids.push(el('h3', {}, 'Chrome'), ...ch.map((f) => item(f, false)));        // implants: click to expand
         if (cm.length) kids.push(el('h3', {}, 'Community'), ...cm.map((f) => item(f, false)));
+        if (dc.length) kids.push(el('h3', {}, 'Domain cards'), ...dc.map((f) => item(f, false)));   // coloured by domain, click to expand
         return el('div', { class: 'sfeats' }, kids);
       })(),
       el('dl', {}, [
         st.nochrome ? el('dt', {}, 'Chrome') : null, st.nochrome ? dd('none (by choice)') : null,
         el('dt', {}, 'Weapons'), dd([st.primary, st.secondary].filter(Boolean).join(' · ')),
         el('dt', {}, 'Armor'), dd(st.armor),
-        el('dt', {}, 'Experiences'), dd(st.experiences.filter(Boolean).map((e) => e + ' +2').join(' · ')),
-        el('dt', {}, 'Domain cards'), dd(st.cards.join(' · ')),
+        el('dt', {}, 'Experiences'), dd(experiences().map((x) => x.name + ' +' + x.mod).join(' · ')),
       ]),
       el('div', { class: 'sheet-acts' }, [
         el('button', { class: 'btn', type: 'button', onclick: exportJson }, 'Export'),
