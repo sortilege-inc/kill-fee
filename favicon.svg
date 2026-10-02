@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#07070b"/>
+  <!-- the yellow band -->
+  <path d="M0 18h64v30H0z" fill="#f3e600"/>
+  <!-- cut corner -->
+  <path d="M52 48l12-12v12z" fill="#07070b"/>
+  <!-- hazard ticks -->
+  <path d="M0 44l6-6v4l-6 6zM10 44l6-6v4l-6 6zM20 44l6-6v4l-6 6z" fill="#07070b" opacity="0.8"/>
+  <!-- KF glyph -->
+  <path d="M12 22h6v9l7-9h7l-8 10 9 11h-7l-6-8-2 2v6h-6z" fill="#07070b"/>
+  <path d="M36 22h16v5H42v4h9v5h-9v8h-6z" fill="#07070b"/>
+  <!-- glitch bars -->
+  <rect x="2" y="50" width="22" height="2" fill="#00e5ff"/>
+  <rect x="40" y="14" width="22" height="2" fill="#ff2a6d"/>
+</svg>
