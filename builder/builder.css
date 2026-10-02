@@ -176,3 +176,26 @@ details.step-text .book{ padding:0 1.1rem 0.8rem; font-size:0.9rem; line-height:
 .mapctl{ display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center; padding:0.5rem 0.6rem; border-top:1px solid var(--edge-soft); }
 .mapctl .btn{ text-decoration:none; }
 .mapctl .hint{ margin:0 0 0 auto; }
+
+/* slot tabs */
+.tabs{ display:flex; gap:0.4rem; margin:0.2rem 0 1rem; border-bottom:1px solid var(--edge); }
+.tab{
+  font-family:var(--caps); font-weight:700; text-transform:uppercase; letter-spacing:0.14em; font-size:0.74rem;
+  background:transparent; color:var(--dust); border:1px solid transparent; border-bottom:0; cursor:pointer;
+  padding:0.55rem 1.1rem 0.5rem; margin-bottom:-1px; display:flex; flex-direction:column; gap:0.15rem; align-items:flex-start;
+}
+.tab i{ font-family:var(--type); font-style:normal; font-size:0.58rem; letter-spacing:0.08em; text-transform:none; color:var(--dust-dim); }
+.tab.done i{ color:var(--essentia); }
+.tab:hover{ color:var(--sand-lit); }
+.tab.on{ color:var(--ochre); background:rgba(17,17,26,0.9); border-color:var(--edge); border-bottom:1px solid rgba(17,17,26,0.9); }
+.tab.on i{ color:var(--essentia); }
+
+/* recommendation strip */
+.rec{ display:flex; flex-wrap:wrap; gap:0.5rem 0.9rem; align-items:center; margin:0 0 1rem; padding:0.7rem 0.9rem; border:1px solid var(--essentia-dim); background:rgba(0,229,255,0.05); }
+.rec .lbl{ font-family:var(--type); font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--essentia); }
+.rec .vals{ display:flex; flex-wrap:wrap; gap:0.35rem; flex:1; }
+.rec .rv{ font-family:var(--type); font-size:0.68rem; color:var(--bone-2); padding:0.15rem 0.5rem; border:1px solid var(--edge); background:var(--stone); }
+.rec .rv b{ color:var(--sand-lit); }
+.rec .rv.primary{ border-color:var(--ochre); color:var(--sand-lit); }
+.rec .rv.secondary{ border-color:var(--ochre-soft); }
+.rec .btn{ margin-left:auto; }

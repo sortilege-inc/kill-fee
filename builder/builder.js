@@ -152,9 +152,9 @@
     const kids = [el('div', { class: 'book', html: md(s.description) })];
     if (s.note) kids.push(hint(s.note, true));
     kids.push(el('h3', {}, 'Foundation'), featList(s.foundation));
-    kids.push(el('h3', {}, 'Class features (' + c.name + ')'), el('div', { class: 'book', html: md(c.description) }), featList(c.features));
+    kids.push(el('h3', {}, s.name + ' features'), el('div', { class: 'book', html: md(c.description) }), featList(c.features));
     kids.push(el('h3', {}, 'Class items'), el('p', { class: 'hint' }, c.class_items));
-    box.appendChild(panel(s.name, c.was + ' — ' + s.was, kids));
+    box.appendChild(panel(s.name, null, kids));
   }
 
   function mapViewer() {
@@ -197,30 +197,64 @@
     nc.querySelector('input').checked = !!st.nochrome;
     const kids = [hint('Nobody is born with an ancestry in Night City; you buy one. Pick <b>one top-slot</b> implant and <b>one bottom-slot</b> implant.'), nc];
     if (!st.nochrome) {
-      for (const slot of ['top', 'bottom']) {
-        const g = el('div', { class: 'opts' });
-        for (const c of D.cyberware.filter((x) => x.slot === slot)) g.appendChild(opt(c.name, st[slot] === c.name, () => { st[slot] = c.name; save(); redraw(); }, { text: c.text, was: c.was }));
-        kids.push(el('h3', {}, slot + ' slot'), g);
-      }
+      st.chromeTab = st.chromeTab === 'bottom' ? 'bottom' : 'top';
+      const tabs = el('div', { class: 'tabs' }, ['top', 'bottom'].map((slot) =>
+        el('button', { type: 'button', class: 'tab' + (st.chromeTab === slot ? ' on' : '') + (st[slot] ? ' done' : ''), onclick: () => { st.chromeTab = slot; save(); redraw(); } },
+          [slot + ' slot', el('i', {}, st[slot] ? st[slot] : 'none picked')])));
+      const slot = st.chromeTab;
+      const g = el('div', { class: 'opts' });
+      for (const c of D.cyberware.filter((x) => x.slot === slot)) g.appendChild(opt(c.name, st[slot] === c.name, () => { st[slot] = c.name; if (slot === 'top' && !st.bottom) st.chromeTab = 'bottom'; save(); redraw(); }, { text: c.text, was: c.was }));
+      kids.push(tabs, g);
     }
     box.appendChild(panel('Cyberware', '47 implants', kids));
   }
 
   function step4(box) {
     const grid = el('div', { class: 'traits' });
-    const pool = D.modifiers.slice();
+    // each select offers only what is left in the pool (+2, +1, +1, 0, 0, −1) after the other traits took theirs
+    const remainingFor = (name) => {
+      const left = D.modifiers.slice();
+      for (const t of D.traits) {
+        if (t.name === name) continue;
+        const v = st.traits[t.name];
+        if (v === undefined || v === null) continue;
+        const i = left.indexOf(v);
+        if (i >= 0) left.splice(i, 1);
+      }
+      return left;
+    };
     for (const t of D.traits) {
+      const cur = st.traits[t.name];
       const sel = el('select', { onchange: (e) => { st.traits[t.name] = e.target.value === '' ? null : +e.target.value; save(); redraw(); } });
       sel.appendChild(el('option', { value: '' }, '—'));
-      for (const m of [2, 1, 0, -1]) { const o = el('option', { value: String(m) }, (m > 0 ? '+' : '') + m); if (st.traits[t.name] === m) o.selected = true; sel.appendChild(o); }
+      const avail = remainingFor(t.name);
+      for (const m of [2, 1, 0, -1]) {
+        const n = avail.filter((x) => x === m).length;
+        if (!n && cur !== m) continue;
+        const o = el('option', { value: String(m) }, (m > 0 ? '+' : '') + m + (n > 1 ? ' (×' + n + ' left)' : ''));
+        if (cur === m) o.selected = true;
+        sel.appendChild(o);
+      }
       grid.appendChild(el('div', { class: 'trait' }, [el('div', { class: 'nm' }, t.name), el('div', { class: 'verbs' }, t.verbs), sel]));
     }
-    const used = D.traits.map((t) => st.traits[t.name]).filter((v) => v !== undefined && v !== null);
-    const left = pool.slice();
-    for (const u of used) { const i = left.indexOf(u); if (i >= 0) left.splice(i, 1); }
+    const left = remainingFor(null);
     const ok = traitsOk();
-    box.appendChild(panel('Traits', '+2, +1, +1, 0, 0, −1', [grid,
-      el('p', { class: 'pool' + (ok ? ' ok' : '') }, [ok ? 'All six assigned.' : 'Still to place: ', el('span', { class: 'left' }, ok ? '' : left.map((m) => (m > 0 ? '+' : '') + m).join(', ') || 'nothing — but the set is wrong; use each value once')])]));
+    const c = cls(), sg = sub();
+    let rec = null;
+    if (c && c.guide && Object.keys(c.guide.traits).length) {
+      const g = c.guide.traits;
+      const order = Object.entries(g).sort((a, b) => b[1] - a[1]);
+      const matches = D.traits.every((t) => st.traits[t.name] === g[t.name]);
+      rec = el('div', { class: 'rec' }, [
+        el('span', { class: 'lbl' }, 'Recommended for ' + (sg ? sg.name : c.name)),
+        el('span', { class: 'vals' }, order.map(([t, m]) => el('span', { class: 'rv' + (m === 2 ? ' primary' : m === 1 ? ' secondary' : '') }, [el('b', {}, (m > 0 ? '+' : '') + m), ' ' + t]))),
+        el('button', { type: 'button', class: 'btn' + (matches ? ' ghost' : ''), onclick: () => { st.traits = Object.assign({}, g); save(); redraw(); } }, matches ? 'Applied' : 'Use these'),
+      ]);
+    } else if (c) {
+      rec = hint('No recommended spread for ' + (sg ? sg.name : c.name) + ' — place +2 on the trait you attack or quickhack with.');
+    }
+    box.appendChild(panel('Traits', '+2, +1, +1, 0, 0, −1', [rec, grid,
+      el('p', { class: 'pool' + (ok ? ' ok' : '') }, [ok ? 'All six assigned.' : 'Still to place: ', el('span', { class: 'left' }, ok ? '' : left.map((m) => (m > 0 ? '+' : '') + m).join(', '))])]));
   }
 
   function step5(box) {
@@ -253,6 +287,16 @@
       return g;
     };
     box.appendChild(hint('Tier 1 gear. Guns use the same ranges and damage dice as the originals; tech and smart weapons need a Netrun trait.'));
+    const gc = cls(), gs = sub();
+    if (gc && gc.guide && (gc.guide.primary || gc.guide.armor)) {
+      const g = gc.guide;
+      const matches = (!g.primary || st.primary === g.primary) && (!g.secondary || st.secondary === g.secondary) && (!g.armor || st.armor === g.armor);
+      box.appendChild(el('div', { class: 'rec' }, [
+        el('span', { class: 'lbl' }, 'Recommended for ' + (gs ? gs.name : gc.name)),
+        el('span', { class: 'vals' }, [g.primary && el('span', { class: 'rv primary' }, g.primary), g.secondary && el('span', { class: 'rv secondary' }, g.secondary), g.armor && el('span', { class: 'rv' }, g.armor)].filter(Boolean)),
+        el('button', { type: 'button', class: 'btn' + (matches ? ' ghost' : ''), onclick: () => { if (g.primary) st.primary = g.primary; st.secondary = g.secondary || null; if (g.armor) st.armor = g.armor; save(); redraw(); } }, matches ? 'Applied' : 'Use these'),
+      ]));
+    }
     box.appendChild(panel('Primary weapon', 'two-handed, or one-handed plus a secondary', [mk(D.equipment.weapons.filter((w) => w.category === 'Primary'), 'primary')]));
     box.appendChild(panel('Secondary weapon', twoH ? 'not with a two-handed primary' : 'one-handed primary only', [mk(D.equipment.weapons.filter((w) => w.category === 'Secondary'), 'secondary', twoH)]));
     const ag = el('div', { class: 'opts' });
@@ -322,7 +366,7 @@
     const d = derived(), c = cls(), s = sub(), co = community(), p = weapon(st.primary), sc = weapon(st.secondary), a = armor();
     const feats = [].concat(c ? c.features : [], s ? s.foundation : []);
     const h = [];
-    h.push('<h1>' + esc(st.name || 'Unnamed') + '</h1><p>' + esc([st.pronouns, s && s.name, c && s && '(' + c.name + ' — ' + s.was + ')', 'Level ' + LEVEL].filter(Boolean).join(' · ')) + '</p>');
+    h.push('<h1>' + esc(st.name || 'Unnamed') + '</h1><p>' + esc([st.pronouns, s && s.name, 'Level ' + LEVEL].filter(Boolean).join(' · ')) + '</p>');
     h.push('<div class="pstats">' + [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresholds', d.major != null ? d.major + ' / ' + d.severe : null]].map(([k, v]) => '<div>' + k + ' <b>' + (v == null ? '—' : v) + '</b></div>').join('') + '</div>');
     h.push('<h2>Traits</h2><p>' + D.traits.map((t) => t.name + ' ' + fmtMod(st.traits[t.name])).join(' · ') + '</p>');
     h.push('<h2>Heritage</h2><p>' + esc((co ? 'Community: ' + co.name : '') + (st.nochrome ? ' · No chrome' : (st.top || st.bottom ? ' · Chrome: ' + [st.top, st.bottom].filter(Boolean).join(', ') : ''))) + '</p>');
@@ -351,17 +395,23 @@
     const dd = (v) => el('dd', {}, v ? v : el('span', { class: 'none' }, 'not yet'));
     const sheet = el('div', { class: 'sheet' }, [
       el('h2', {}, st.name || 'Unnamed'),
-      el('p', { class: 'sub' }, [st.pronouns, s && s.name, c && s && '(' + c.name + ')', 'level ' + LEVEL].filter(Boolean).join(' · ')),
+      el('p', { class: 'sub' }, [st.pronouns, s && s.name, 'level ' + LEVEL].filter(Boolean).join(' · ')),
       el('div', { class: 'stats' }, [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresholds', d.major != null ? d.major + ' / ' + d.severe : null]].map(([k, v]) => el('div', { class: 'stat' }, [el('b', {}, v == null ? '—' : String(v)), el('span', {}, k)]))),
       el('div', { class: 'tr6' }, D.traits.map((t) => el('div', { class: 'stat' }, [el('b', {}, fmtMod(st.traits[t.name])), el('span', {}, t.name)]))),
       (function () {
-        const fs = [].concat(s ? s.foundation.map((f) => Object.assign({ from: s.name }, f)) : [], c ? c.features.map((f) => Object.assign({ from: c.name }, f)) : []);
-        if (!fs.length) return null;
-        return el('div', { class: 'sfeats' }, [el('h3', {}, 'Features')].concat(fs.map((f) => el('details', { class: 'sfeat', open: true }, [el('summary', {}, [f.name, el('i', {}, f.from)]), el('div', { class: 'tx', html: md(f.text) })]))));
+        const fs = [].concat(s ? s.foundation.map((f) => Object.assign({ from: s.name + ' · foundation' }, f)) : [], c && s ? c.features.map((f) => Object.assign({ from: s.name }, f)) : []);
+        const ch = ['top', 'bottom'].map(chrome).filter(Boolean).map((x) => Object.assign({ from: x.slot + ' slot' }, x));
+        const cm = co ? [Object.assign({ from: 'community' }, co)] : [];
+        if (!fs.length && !ch.length && !cm.length) return null;
+        const item = (f, open) => el('details', { class: 'sfeat', open }, [el('summary', {}, [f.name, el('i', {}, f.from)]), el('div', { class: 'tx', html: md(f.text) })]);
+        const kids = [];
+        if (fs.length) kids.push(el('h3', {}, 'Features'), ...fs.map((f) => item(f, true)));       // class + subclass: open, click to close
+        if (ch.length) kids.push(el('h3', {}, 'Chrome'), ...ch.map((f) => item(f, false)));        // implants: click to expand
+        if (cm.length) kids.push(el('h3', {}, 'Community'), ...cm.map((f) => item(f, false)));
+        return el('div', { class: 'sfeats' }, kids);
       })(),
       el('dl', {}, [
-        el('dt', {}, 'Chrome'), dd(st.nochrome ? 'none (by choice)' : [st.top, st.bottom].filter(Boolean).join(' · ')),
-        el('dt', {}, 'Community'), dd(co && co.name),
+        st.nochrome ? el('dt', {}, 'Chrome') : null, st.nochrome ? dd('none (by choice)') : null,
         el('dt', {}, 'Weapons'), dd([st.primary, st.secondary].filter(Boolean).join(' · ')),
         el('dt', {}, 'Armor'), dd(st.armor),
         el('dt', {}, 'Experiences'), dd(st.experiences.filter(Boolean).map((e) => e + ' +2').join(' · ')),
