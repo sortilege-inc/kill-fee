@@ -509,3 +509,19 @@ article code.tag-yours, article code.tag-mine{ color:var(--lucy); border-color:r
 }
 
 @media print{ .topnav{ display:none } }
+
+/* ------------------------------------------------------------ maps */
+.map-frame{
+  margin:0 0 2rem; padding:9px; background:var(--stone-2);
+  border:1px solid var(--edge); box-shadow:var(--shadow-deep); position:relative;
+  clip-path:polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%);
+}
+.map-frame::before{ content:""; position:absolute; top:0; left:0; width:54px; height:4px; background:var(--essentia); }
+.map-frame a{ display:block; }
+.map-frame img{ display:block; width:100%; height:auto; background:var(--night); filter:contrast(1.04); }
+.map-frame figcaption{
+  font-family:var(--type); text-transform:uppercase; letter-spacing:0.16em;
+  font-size:0.6rem; color:var(--dust); text-align:center; margin-top:0.7rem;
+}
+.map-frame figcaption .hint{ color:var(--essentia); }
+.panel .map-frame{ margin-top:0; }

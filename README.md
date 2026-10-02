@@ -63,6 +63,11 @@ Provenance tags in GM notes: `` `SET` `` decided · `` `SOURCE` `` verified in t
 Adding a session: drop `content/chronicle/s01-<slug>.md` in with `date:` and `order:` front
 matter and rebuild; the Chronicle index swaps its empty state for the session list.
 
+Maps live in `../kill-fee-support/build/maps/` (the game-maps.com Night City world map plus 19
+district maps). `atlas_map` in `site.config.json` draws the world map at the top of the Night City
+index; any page can carry `map: <file>` in its front matter to show a district map above its text.
+Only referenced maps are copied into the repo.
+
 The optional spine tally (`spine` in `site.config.json`, off by default) draws a numbered row on
 the home page and the Gigs index — set it to `{"label": "…", "total": N, "reached": M}` once the
 campaign has a count worth tracking.
