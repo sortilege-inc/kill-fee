@@ -206,7 +206,7 @@
       }
       return g;
     };
-    box.appendChild(hint('Weapons and armor are still the book\'s tier 1 tables — guns and chrome names come when the remap reaches equipment. The numbers are what count.', true));
+    box.appendChild(hint('Weapons and armor are still the base tier 1 tables — guns and chrome names are coming. The numbers are what count.', true));
     box.appendChild(panel('Primary weapon', 'two-handed, or one-handed plus a secondary', [mk(D.equipment.weapons.filter((w) => w.category === 'Primary'), 'primary')]));
     box.appendChild(panel('Secondary weapon', twoH ? 'not with a two-handed primary' : 'one-handed primary only', [mk(D.equipment.weapons.filter((w) => w.category === 'Secondary'), 'secondary', twoH)]));
     const ag = el('div', { class: 'opts' });
@@ -215,7 +215,7 @@
     const pg = el('div', { class: 'opts' });
     for (const p of ['Minor Health Potion (clear 1d4 Hit Points)', 'Minor Stamina Potion (clear 1d4 Stress)']) pg.appendChild(opt(p, st.potion === p, () => { st.potion = p; save(); redraw(); }, { cls: 'unmapped' }));
     const c = cls();
-    box.appendChild(panel('Other starting items', null, [pg, c ? hint('Class items: <b>' + esc(c.class_items) + '</b>') : null, hint('Plus the book\'s basics — rope, supplies, a handful of eddies. The GM will say what that looks like in Night City.')]));
+    box.appendChild(panel('Other starting items', null, [pg, c ? hint('Class items: <b>' + esc(c.class_items) + '</b>') : null, hint('Plus the basics — rope, supplies, a handful of eddies. The GM will say what that looks like in Night City.')]));
   }
 
   function step6(box) {
@@ -245,7 +245,7 @@
       if (!on && st.cards.length >= 2) b.disabled = true;
       g.appendChild(b);
     }
-    box.appendChild(panel('Domain cards', c.domains.join(' + ') + ' · choose two', [hint('Converted cards carry their Night City name; the rest still show the book\'s name with the renamed terms inside.'), g]));
+    box.appendChild(panel('Domain cards', c.domains.join(' + ') + ' · choose two', [hint('Converted cards carry their Night City name; the rest still show their original name with the renamed terms inside.'), g]));
   }
 
   function step9(box) {
@@ -304,8 +304,13 @@
     const sheet = el('div', { class: 'sheet' }, [
       el('h2', {}, st.name || 'Unnamed'),
       el('p', { class: 'sub' }, [st.pronouns, s && s.name, c && s && '(' + c.name + ')', 'level ' + LEVEL].filter(Boolean).join(' · ')),
-      el('div', { class: 'stats' }, [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresh.', d.major != null ? d.major + '/' + d.severe : null]].map(([k, v]) => el('div', { class: 'stat' }, [el('b', {}, v == null ? '—' : String(v)), el('span', {}, k)]))),
-      el('div', { class: 'tr6' }, D.traits.map((t) => el('div', { class: 'stat' }, [el('b', {}, fmtMod(st.traits[t.name])), el('span', {}, t.name.slice(0, 5))]))),
+      el('div', { class: 'stats' }, [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresholds', d.major != null ? d.major + ' / ' + d.severe : null]].map(([k, v]) => el('div', { class: 'stat' }, [el('b', {}, v == null ? '—' : String(v)), el('span', {}, k)]))),
+      el('div', { class: 'tr6' }, D.traits.map((t) => el('div', { class: 'stat' }, [el('b', {}, fmtMod(st.traits[t.name])), el('span', {}, t.name)]))),
+      (function () {
+        const fs = [].concat(s ? s.foundation.map((f) => Object.assign({ from: s.name }, f)) : [], c ? c.features.map((f) => Object.assign({ from: c.name }, f)) : []);
+        if (!fs.length) return null;
+        return el('div', { class: 'sfeats' }, [el('h3', {}, 'Features')].concat(fs.map((f) => el('details', { class: 'sfeat', open: true }, [el('summary', {}, [f.name, el('i', {}, f.from)]), el('div', { class: 'tx', html: md(f.text) })]))));
+      })(),
       el('dl', {}, [
         el('dt', {}, 'Chrome'), dd(st.nochrome ? 'none (by choice)' : [st.top, st.bottom].filter(Boolean).join(' · ')),
         el('dt', {}, 'Community'), dd(co && co.name),
@@ -330,9 +335,7 @@
     side();
     mainEl.innerHTML = '';
     mainEl.appendChild(el('div', { class: 'steps' }, STEPS.map((_, i) => el('button', { type: 'button', class: (st.step === i + 1 ? 'on' : stepDone(i + 1) ? 'done' : ''), title: STEP_TITLES[i], onclick: () => { st.step = i + 1; save(); redraw(); window.scrollTo(0, 0); } }, String(i + 1)))));
-    const t = D.steps.find((x) => x.n === st.step);
     mainEl.appendChild(el('h2', { class: 'group-h' }, 'Step ' + st.step + ' — ' + STEP_TITLES[st.step - 1]));
-    if (t) mainEl.appendChild(el('details', { class: 'step-text' }, [el('summary', {}, 'The book: ' + t.title), el('div', { class: 'book', html: md(t.text) })]));
     const box = el('div');
     STEPS[st.step - 1](box);
     mainEl.appendChild(box);

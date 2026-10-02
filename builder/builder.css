@@ -53,7 +53,7 @@ details.step-text .book{ padding:0 1.1rem 0.8rem; font-size:0.9rem; line-height:
 .opt .tx{ display:block; color:var(--bone-2); font-size:0.82rem; }
 .opt .tx p{ margin:0 0 0.4rem; }
 .opt .blurb{ display:block; font-family:var(--type); font-size:0.72rem; color:var(--dust); margin-bottom:0.35rem; line-height:1.45; }
-.opt.unmapped .nm::after{ content:" ·book name"; font-family:var(--type); font-size:0.55rem; letter-spacing:0.08em; color:var(--dust-dim); text-transform:uppercase; }
+.opt.unmapped .nm::after{ content:" ·original name"; font-family:var(--type); font-size:0.55rem; letter-spacing:0.08em; color:var(--dust-dim); text-transform:uppercase; }
 .opts.wide{ grid-template-columns:1fr; }
 
 /* feature lists (class features, foundation) */
@@ -91,7 +91,7 @@ details.step-text .book{ padding:0 1.1rem 0.8rem; font-size:0.9rem; line-height:
 .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:0.4rem; margin:0.6rem 0; }
 .stat{ background:var(--stone); border:1px solid var(--edge); padding:0.4rem 0.3rem; text-align:center; }
 .stat b{ display:block; font-family:var(--slab); font-weight:900; font-size:1.3rem; color:var(--ochre); line-height:1; }
-.stat span{ font-family:var(--type); font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--dust); }
+.stat span{ font-family:var(--type); font-size:0.52rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--dust); display:block; line-height:1.2; }
 .tr6{ display:grid; grid-template-columns:repeat(3,1fr); gap:0.3rem; margin:0.4rem 0 0.8rem; }
 .tr6 .stat b{ font-size:1.05rem; color:var(--sand-lit); }
 .sheet dl{ margin:0.5rem 0 0; font-size:0.8rem; }
@@ -123,3 +123,13 @@ details.step-text .book{ padding:0 1.1rem 0.8rem; font-size:0.9rem; line-height:
   .printsheet .pstats div{ border:1px solid #000; padding:4pt 8pt; }
   .printsheet p{ margin:0 0 4pt; }
 }
+
+/* features on the sheet */
+.sfeats{ margin:0.8rem 0 0; border-top:1px solid var(--edge-soft); padding-top:0.6rem; }
+.sfeats h3{ font-family:var(--type); font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--dust); margin:0 0 0.4rem; }
+.sfeat{ margin:0 0 0.4rem; border:1px solid var(--edge-soft); background:var(--stone); }
+.sfeat summary{ cursor:pointer; padding:0.35rem 0.55rem; font-family:var(--caps); font-weight:700; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--sand-lit); display:flex; justify-content:space-between; gap:0.5rem; }
+.sfeat summary i{ font-family:var(--type); font-style:normal; font-size:0.55rem; letter-spacing:0.08em; color:var(--essentia); text-transform:uppercase; }
+.sfeat .tx{ padding:0.1rem 0.6rem 0.5rem; font-size:0.76rem; line-height:1.45; color:var(--bone-2); }
+.sfeat .tx p{ margin:0 0 0.35rem; }
+.sfeat .tx b{ color:var(--sand-lit); }
