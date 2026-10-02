@@ -571,3 +571,5 @@ article code.tag-yours, article code.tag-mine{ color:var(--lucy); border-color:r
   font-family:var(--type); font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--dust-dim);
 }
 .dc-foot .was i{ font-style:normal; color:var(--dust); }
+article h2, article h3{ scroll-margin-top:5.5rem; }
+.dc-level.dc-level-tag{ width:auto; padding:6px 10px 10px; font-size:0.6rem; }

@@ -23,7 +23,7 @@ yellow band on the masthead.
 | `cards/` | Domain Cards — one page per remapped domain, cards rendered from a `.cards.json` sidecar with the staged netrunner art. **Codex levels 1–2 so far** |
 | `lore/` | How the city works. **Empty** |
 | `table/` | Player-facing: principles, Session 0, character options. **Empty until the remap is done** |
-| `gm/` | **Behind the Blackwall** — campaign frame, the remap workbench, character menus, the plot, session outline, factions, locations, campaign state, next session |
+| `gm/` | **Behind the Blackwall** — campaign frame, the remap workbench, the **Card Tracker** (generated from the Daggerheart corpus on every build: all 210 domain cards, converted or not), character menus, the plot, session outline, factions, locations, campaign state, next session |
 | `edgerunners.css` | The theme |
 
 **The remap is the gate.** `gm/daggerheart-remap.html` is the GM's workbench for turning
@@ -71,7 +71,9 @@ Only referenced maps are copied into the repo.
 
 Domain cards: `content/cards/<domain>.md` carries the domain's intro; `content/cards/<domain>.cards.json`
 lists its cards (`name`, `was`, `level`, `domain`, `type`, `recall`, `art`, `art_credit`, `text` in
-Markdown). `art` is a path under `build/art/`; the build copies referenced files into `cards/img/`.
+Markdown). `art` is a path under `build/art/`; the build copies referenced files into `cards/img/`. Card text is
+passed through `term_map` in `site.config.json` at build time (whole-word: the six trait renames,
+Spellcast → Quickhack), so the sidecar can keep the book's wording.
 
 Card art for the remap (domain cards, cyberware, quickhacks) is staged in
 `../kill-fee-support/build/art/netrunner/` — 155 Android: Netrunner card illustrations, mostly
