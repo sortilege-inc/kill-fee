@@ -430,123 +430,164 @@ Hardy as written; no sixteenth community.</p>
 sidebar the corpus flattened into it. Communities are done. Unmapped neighborhoods, free for a
 bespoke community: Downtown, Japantown, Vista del Rey, Arroyo, West Wind Estate, Dogtown, North
 Badlands.</p>
-<h2 id="5-classes">5. Classes (13) and subclasses (26)</h2>
-<p><code class="tag tag-set">SET</code> The Warlock is the <em>Hope &amp; Fear</em> version (not the <em>Void</em> playtest). The <a class="ref" href="character-menus.html">Character Menus</a> already name the classes in
-play: Netrunner / Wizard (Deletion / School of War), Netmerc / Warlock, Druid (Warden of the Elements / Warden of Renewal), Seraph
-(Divine Wielder), Guardian (Stalwart / Vengeance), Bard (Troubadour), Rogue (Syndicate /
-Nightwalker), Ranger (Wayfinder), Warrior (Call of the Slayer). Remap those first; the rest only
-if a player wanders.</p>
-<div class="tablewrap"><table>
-<thead>
-<tr>
-<th>Daggerheart class</th>
-<th>Night City</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Bard</td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Druid</td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Guardian</td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Ranger</td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Rogue</td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Seraph</td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Sorcerer</td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Warrior</td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Wizard</td>
-<td><strong>Netrunner</strong></td>
-<td><code class="tag tag-set">SET</code> — subclasses Exfil (was School of Knowledge), Deletion (was School of War)</td>
-</tr>
-<tr>
-<td>Assassin <em>(H&amp;F)</em></td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Brawler <em>(H&amp;F)</em></td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-<tr>
-<td>Warlock <em>(H&amp;F)</em></td>
-<td><strong>Netmerc</strong></td>
-<td><code class="tag tag-set">SET</code> — subclasses Bounty (was Pact of the Wrathful), Blackwall (was Pact of the Endless)</td>
-</tr>
-<tr>
-<td>Witch <em>(H&amp;F)</em></td>
-<td></td>
-<td><code class="tag tag-open">OPEN</code></td>
-</tr>
-</tbody>
-</table></div>
-<p>Subclasses in the corpus: Troubadour, Wordsmith, Warden of the Elements, Warden of Renewal, Stalwart, Vengeance, Beastbound, Wayfinder, Nightwalker, Syndicate, Divine Wielder, Winged Sentinel, Elemental Origin, Primal Origin, Call of the Brave, Call of the Slayer, School of Knowledge, School of War, Executioners Guild <em>(H&amp;F)</em>, Poisoners Guild <em>(H&amp;F)</em>, Juggernaut <em>(H&amp;F)</em>, Martial Artist <em>(H&amp;F)</em>, Pact of the Endless <em>(H&amp;F)</em>, Pact of the Wrathful <em>(H&amp;F)</em>, Hedge <em>(H&amp;F)</em>, Moon <em>(H&amp;F)</em>.</p>
-<p>Renamed subclasses so far (owner 2026-10-02):</p>
+<h2 id="5-classes">5. Classes (13) and subclasses (26) → Archetypes</h2>
+<p><code class="tag tag-set">SET</code> Owner 2026-10-02: <strong>there is no class pick — a character picks one of 26 archetypes</strong>, each a
+class + subclass pair under a Night City name, with trope examples ("you don't have to be, but if you
+are, you're probably this"). The class underneath still supplies domains, Evasion, HP, class features
+and the Netrun trait; the subclass supplies the foundation. Names and tropes live in
+<code>content/archetypes.json</code>; the Character Builder's step 1 is this list.</p>
 <div class="tablewrap"><table>
 <thead>
 <tr>
 <th>Daggerheart</th>
 <th>Night City</th>
+<th>Tropes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>School of Knowledge (Wizard)</td>
-<td><strong>Exfil</strong> (Netrunner)</td>
+<td>Bard — Troubadour</td>
+<td><strong>Rockerboy</strong></td>
+<td>Frontman of a Samurai-style band, a club act with a following, a street musician the gangs leave alone.</td>
 </tr>
 <tr>
-<td>School of War (Wizard)</td>
-<td><strong>Deletion</strong> (Netrunner)</td>
+<td>Bard — Wordsmith</td>
+<td><strong>Media</strong></td>
+<td>N54 stringer, screamsheet writer, streamer with an audience that shows up.</td>
 </tr>
 <tr>
-<td>Pact of the Wrathful (Warlock)</td>
-<td><strong>Bounty</strong> (Netmerc)</td>
+<td>Druid — Warden of the Elements</td>
+<td><strong>Daemon Rider</strong></td>
+<td>Lunar netrunner, ICE-breaker, Voodoo Boys-adjacent — Beastform is digital shapeshifting: crawler forms to slip ICE, hunter-killer forms to fight other runners.</td>
 </tr>
 <tr>
-<td>Pact of the Endless (Warlock)</td>
-<td><strong>Blackwall</strong> (Netmerc)</td>
+<td>Druid — Warden of Renewal</td>
+<td><strong>Biohacker</strong></td>
+<td>Chem cook, back-room ripper's partner, the no-chrome edge — Beastform is a chemically altered state (fast, monstrous, numb to pain) with a comedown.</td>
+</tr>
+<tr>
+<td>Guardian — Stalwart</td>
+<td><strong>Bodyguard</strong></td>
+<td>Corporate close protection, Arasaka security detail, ex-Trauma Team — the one who soaks hits for the client.</td>
+</tr>
+<tr>
+<td>Guardian — Vengeance</td>
+<td><strong>Heavy</strong></td>
+<td>Maelstrom muscle, 6th Street, gang enforcer — anyone who hurts the team pays for it.</td>
+</tr>
+<tr>
+<td>Ranger — Beastbound</td>
+<td><strong>Nomad</strong></td>
+<td>Aldecaldos, Badlands convoy — the companion is a vehicle, a dog, or a drone.</td>
+</tr>
+<tr>
+<td>Ranger — Wayfinder</td>
+<td><strong>Bounty Hunter</strong></td>
+<td>Skip tracer, NetWatch tracker, braindance detective.</td>
+</tr>
+<tr>
+<td>Rogue — Nightwalker</td>
+<td><strong>Infiltrator</strong></td>
+<td>Stealth solo, optical-camo ghost, corporate thief — the shadow abilities are camo and reflex boosters.</td>
+</tr>
+<tr>
+<td>Rogue — Syndicate</td>
+<td><strong>Fixer</strong></td>
+<td>Kabuki fixer, Afterlife regular, a contact in every district — the network is the augmentation.</td>
+</tr>
+<tr>
+<td>Seraph — Divine Wielder</td>
+<td><strong>Medtech</strong></td>
+<td>Trauma Team, combat medic, ripperdoc's partner — Prayer Dice are a stim or med-kit pool.</td>
+</tr>
+<tr>
+<td>Seraph — Winged Sentinel</td>
+<td><strong>Lawman</strong></td>
+<td>MAXTAC, NCPD, corporate response team.</td>
+</tr>
+<tr>
+<td>Sorcerer — Elemental Origin</td>
+<td><strong>Tech (Elementalist)</strong></td>
+<td>Street techie, Arroyo garage, drone and rig builder — your element is your rig's specialty.</td>
+</tr>
+<tr>
+<td>Sorcerer — Primal Origin</td>
+<td><strong>Tech (Overclock)</strong></td>
+<td>Street techie who pushes everything past spec — extends, boosts and burns out their own gear.</td>
+</tr>
+<tr>
+<td>Warrior — Call of the Brave</td>
+<td><strong>Merc</strong></td>
+<td>Militech veteran, Unification War vet, 6th Street — the one who gets braver as it gets worse.</td>
+</tr>
+<tr>
+<td>Warrior — Call of the Slayer</td>
+<td><strong>Solo</strong></td>
+<td>Heavily chromed solo, the Afterlife's best, famous on braindance for their fights.</td>
+</tr>
+<tr>
+<td>Wizard — School of Knowledge</td>
+<td><strong>Netrunner (Exfil)</strong></td>
+<td>Data courier, corporate exfiltration specialist, the runner who always has one more program.</td>
+</tr>
+<tr>
+<td>Wizard — School of War</td>
+<td><strong>Netrunner (Deletion)</strong></td>
+<td>Arasaka netsec, combat runner, Voodoo Boys-trained — an offensive hacker who fries people.</td>
+</tr>
+<tr>
+<td>Assassin — Executioners Guild</td>
+<td><strong>Hitman</strong></td>
+<td>Corporate wetwork, Tyger Claw enforcer, the first shot that ends it.</td>
+</tr>
+<tr>
+<td>Assassin — Poisoners Guild</td>
+<td><strong>Chemist</strong></td>
+<td>Toxin cook, Scav doctor, the no-chrome fixer's edge — poisons and afflictions.</td>
+</tr>
+<tr>
+<td>Brawler — Juggernaut</td>
+<td><strong>Juggernaut</strong></td>
+<td>Full borg, Maelstrom heavy, the one built like a truck.</td>
+</tr>
+<tr>
+<td>Brawler — Martial Artist</td>
+<td><strong>Martial Artist</strong></td>
+<td>The Animals, a Tyger Claw dojo, the fight-club circuit.</td>
+</tr>
+<tr>
+<td>Warlock — Pact of the Endless</td>
+<td><strong>Netmerc (Blackwall)</strong></td>
+<td>Voodoo Boys contractor — the patron is beyond the Blackwall, and you don't know it yet.</td>
+</tr>
+<tr>
+<td>Warlock — Pact of the Wrathful</td>
+<td><strong>Netmerc (Bounty)</strong></td>
+<td>NetWatch bounty runner, ICE hunter, the netmerc who destroys those who act against them.</td>
+</tr>
+<tr>
+<td>Witch — Hedge</td>
+<td><strong>Ripperdoc</strong></td>
+<td>Back-room ripper, street clinic, Kabuki chrome dealer — consumables and protective implants.</td>
+</tr>
+<tr>
+<td>Witch — Moon</td>
+<td><strong>Idol</strong></td>
+<td>Celebrity, influencer, braindance star — a glamour people would rather watch than shoot.</td>
 </tr>
 </tbody>
 </table></div>
+<p><code class="tag tag-note">NOTE</code> Lawman: Wings of Light flies and carries people — AV drop or jet rig, same ruling as the cyberware
+flight cards. <code class="tag tag-note">NOTE</code> Class names themselves (Bard, Druid, Guardian …) are not renamed; they only show as
+"was Bard — Troubadour". <code class="tag tag-open">OPEN</code> Class features, subclass features and the other domains' cards still carry
+the book's text with the renamed terms inside.</p>
 <p>Candidate bespoke pieces named in the menus (one or two per character, not more):</p>
 <ul>
 <li>Netrunner (was Wizard): Codex → program library; spells → quickhacks; Splendor → nanite repair / system restores.</li>
-<li>Druid: Beastform → digital shapeshifting (netrunner) <em>or</em> chemically altered states with a comedown (biohacker).</li>
-<li>Seraph: Prayer Dice → stim / med-kit pool.</li>
-<li>Bard: Rally die → calling in a favor; Codex → contacts and favors owed.</li>
-<li>Rogue (Nightwalker): shadow abilities → optical camo and reflex boosters.</li>
+<li>Daemon Rider / Biohacker (was Druid): Beastform → digital shapeshifting (netrunner) <em>or</em> chemically altered states with a comedown (biohacker).</li>
+<li>Medtech (was Seraph): Prayer Dice → stim / med-kit pool.</li>
+<li>Rockerboy (was Bard): Rally die → calling in a favor; Codex → contacts and favors owed.</li>
+<li>Infiltrator (was Rogue, Nightwalker): shadow abilities → optical camo and reflex boosters.</li>
 <li>Netmerc (was Warlock): patron → the Voodoo Boys (and what is really behind them — <a class="ref" href="factions.html">Factions</a>).</li>
 </ul>
 <h2 id="6-domains">6. Domains (10) and domain cards (210)</h2>

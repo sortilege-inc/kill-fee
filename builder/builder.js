@@ -5,7 +5,7 @@
   const D = window.KF_DATA;
   const KEY = 'kf-builder-v1';
   const LEVEL = D.level || 1;
-  const STEP_TITLES = ['Class & subclass', 'Heritage', 'Traits', 'Record', 'Equipment', 'Background', 'Experiences', 'Domain cards', 'Connections'];
+  const STEP_TITLES = ['Archetype', 'Heritage', 'Traits', 'Record', 'Equipment', 'Background', 'Experiences', 'Domain cards', 'Connections'];
 
   // ---------------------------------------------------------------- state
   function fresh() {
@@ -15,6 +15,7 @@
   }
   let st = fresh();
   try { const s = localStorage.getItem(KEY); if (s) st = Object.assign(fresh(), JSON.parse(s)); } catch (e) { /* storage unavailable */ }
+  if (st.cls && st.sub && !(D.classes.find((c) => c.name === st.cls) || { subclasses: [] }).subclasses.some((x) => x.name === st.sub)) { st.sub = null; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* ignore */ } }
 
   // ---------------------------------------------------------------- lookups
@@ -112,6 +113,11 @@
   const featList = (fs) => el('div', { class: 'feat', html: fs.map((f) => '<p><b>' + esc(f.name) + ':</b> ' + md(f.text).replace(/^<p>|<\/p>$/g, '') + '</p>').join('') });
 
   // ---------------------------------------------------------------- steps
+  function archetypes() {
+    const out = [];
+    for (const c of D.classes) for (const s of c.subclasses) out.push({ c, s });
+    return out;
+  }
   function step1(box) {
     box.appendChild(panel('Who are you', null, [
       el('div', { class: 'row2' }, [
@@ -120,21 +126,21 @@
       ]),
     ]));
     const grid = el('div', { class: 'opts' });
-    for (const c of D.classes) {
-      grid.appendChild(opt(c.name, st.cls === c.name, () => { st.cls = c.name; st.sub = null; st.cards = []; save(); redraw(); },
-        { meta: c.domains.join(' · ') + ' · Evasion ' + c.evasion + ' · HP ' + c.hp + (c.hf ? ' · H&F' : ''), was: c.was, cls: c.name === c.was && ['Bard', 'Druid', 'Guardian', 'Ranger', 'Rogue', 'Seraph', 'Sorcerer', 'Warrior', 'Assassin', 'Brawler', 'Witch'].includes(c.name) ? 'unmapped' : '' }));
+    for (const { c, s } of archetypes()) {
+      const on = st.cls === c.name && st.sub === s.name;
+      grid.appendChild(opt(s.name, on, () => { st.cls = c.name; st.sub = s.name; st.cards = []; save(); redraw(); }, {
+        meta: c.domains.join(' + ') + ' · Evasion ' + c.evasion + ' · HP ' + c.hp + (s.spellcast_trait ? ' · Netrun ' + s.spellcast_trait : ''),
+        blurb: s.tropes, was: c.was + ' — ' + s.was }));
     }
-    box.appendChild(panel('Class', '13 — the book\'s names where the remap hasn\'t reached yet', [hint('Netrunner (was Wizard) and Netmerc (was Warlock) are remapped; the rest keep the book\'s class name for now.'), grid]));
-    const c = cls();
-    if (!c) return;
-    box.appendChild(panel(c.name, 'class features', [el('div', { class: 'book', html: md(c.description) }), el('h3', {}, 'Class features'), featList(c.features), el('h3', {}, 'Class items'), el('p', { class: 'hint' }, c.class_items)]));
-    const sg = el('div', { class: 'opts' });
-    for (const s of c.subclasses) {
-      sg.appendChild(opt(s.name, st.sub === s.name, () => { st.sub = s.name; save(); redraw(); }, { meta: (s.spellcast_trait ? 'Netrun trait: ' + s.spellcast_trait : 'no Netrun trait'), text: s.description, was: s.was }));
-    }
-    box.appendChild(panel('Subclass', null, [sg]));
-    const s = sub();
-    if (s) box.appendChild(panel(s.name, 'foundation', [featList(s.foundation)]));
+    box.appendChild(panel('Archetype', '26 — pick one; the class comes with it', [hint('You don\'t have to be the trope. But if you are, you\'re probably this.'), grid]));
+    const c = cls(), s = sub();
+    if (!c || !s) return;
+    const kids = [el('div', { class: 'book', html: md(s.description) })];
+    if (s.note) kids.push(hint(s.note, true));
+    kids.push(el('h3', {}, 'Foundation'), featList(s.foundation));
+    kids.push(el('h3', {}, 'Class features (' + c.name + ')'), el('div', { class: 'book', html: md(c.description) }), featList(c.features));
+    kids.push(el('h3', {}, 'Class items'), el('p', { class: 'hint' }, c.class_items));
+    box.appendChild(panel(s.name, c.was + ' — ' + s.was, kids));
   }
 
   function step2(box) {
@@ -269,7 +275,7 @@
     const d = derived(), c = cls(), s = sub(), co = community(), p = weapon(st.primary), sc = weapon(st.secondary), a = armor();
     const feats = [].concat(c ? c.features : [], s ? s.foundation : []);
     const h = [];
-    h.push('<h1>' + esc(st.name || 'Unnamed') + '</h1><p>' + esc([st.pronouns, c && c.name, s && s.name, 'Level ' + LEVEL].filter(Boolean).join(' · ')) + '</p>');
+    h.push('<h1>' + esc(st.name || 'Unnamed') + '</h1><p>' + esc([st.pronouns, s && s.name, c && s && '(' + c.name + ' — ' + s.was + ')', 'Level ' + LEVEL].filter(Boolean).join(' · ')) + '</p>');
     h.push('<div class="pstats">' + [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresholds', d.major != null ? d.major + ' / ' + d.severe : null]].map(([k, v]) => '<div>' + k + ' <b>' + (v == null ? '—' : v) + '</b></div>').join('') + '</div>');
     h.push('<h2>Traits</h2><p>' + D.traits.map((t) => t.name + ' ' + fmtMod(st.traits[t.name])).join(' · ') + '</p>');
     h.push('<h2>Heritage</h2><p>' + esc((co ? 'Community: ' + co.name : '') + (st.nochrome ? ' · No chrome' : (st.top || st.bottom ? ' · Chrome: ' + [st.top, st.bottom].filter(Boolean).join(', ') : ''))) + '</p>');
@@ -297,7 +303,7 @@
     const dd = (v) => el('dd', {}, v ? v : el('span', { class: 'none' }, 'not yet'));
     const sheet = el('div', { class: 'sheet' }, [
       el('h2', {}, st.name || 'Unnamed'),
-      el('p', { class: 'sub' }, [st.pronouns, c && c.name, s && s.name, 'level ' + LEVEL].filter(Boolean).join(' · ')),
+      el('p', { class: 'sub' }, [st.pronouns, s && s.name, c && s && '(' + c.name + ')', 'level ' + LEVEL].filter(Boolean).join(' · ')),
       el('div', { class: 'stats' }, [['Evasion', d.evasion], ['HP', d.hp], ['Stress', d.stress], ['Hope', d.hope], ['Armor', d.armorScore], ['Thresh.', d.major != null ? d.major + '/' + d.severe : null]].map(([k, v]) => el('div', { class: 'stat' }, [el('b', {}, v == null ? '—' : String(v)), el('span', {}, k)]))),
       el('div', { class: 'tr6' }, D.traits.map((t) => el('div', { class: 'stat' }, [el('b', {}, fmtMod(st.traits[t.name])), el('span', {}, t.name.slice(0, 5))]))),
       el('dl', {}, [
