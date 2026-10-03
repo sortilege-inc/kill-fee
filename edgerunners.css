@@ -605,3 +605,5 @@ body{ overflow-x:clip; }
 .itabs button:hover{ color:var(--sand-lit); }
 .itabs button.on{ color:var(--ochre); background:var(--stone); border-color:var(--edge); border-bottom:1px solid var(--stone); }
 .tabpanel[hidden]{ display:none; }
+.topnav a.brand{ font-family:var(--wood); font-weight:900; font-style:italic; letter-spacing:0.06em; text-transform:uppercase; font-size:1.05rem; color:var(--ochre); margin-right:auto; padding:0; border:0; }
+.topnav a.brand:hover{ color:var(--sun); }
