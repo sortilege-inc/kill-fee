@@ -594,3 +594,14 @@ body{ overflow-x:clip; }
 .masthead.home .band::after{ /* cyan hairline under the stripe — the screen edge */
   content:""; position:absolute; left:0; right:0; bottom:-3px; height:2px; background:var(--essentia); opacity:0.8;
 }
+
+/* ------------------------------------------------------------ index tabs (Corps / Gangs, Chrome / Weapons & Armor) */
+.itabs{ display:flex; flex-wrap:wrap; gap:0.4rem; margin:0.4rem 0 1.2rem; border-bottom:1px solid var(--edge); }
+.itabs button{
+  font-family:var(--caps); font-weight:700; text-transform:uppercase; letter-spacing:0.16em; font-size:0.78rem;
+  background:transparent; color:var(--dust); border:1px solid transparent; border-bottom:0; cursor:pointer;
+  padding:0.6rem 1.2rem 0.55rem; margin-bottom:-1px;
+}
+.itabs button:hover{ color:var(--sand-lit); }
+.itabs button.on{ color:var(--ochre); background:var(--stone); border-color:var(--edge); border-bottom:1px solid var(--stone); }
+.tabpanel[hidden]{ display:none; }
