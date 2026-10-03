@@ -13,16 +13,13 @@ yellow band on the masthead.
 | Path | What |
 |------|------|
 | `index.html` | Landing page — masthead band, section cards, optional spine tally |
-| `chronicle/` | Session pages. **Empty — no sessions played yet** |
+| `gigs/` | Session pages — the record of play. **Empty — no gigs played yet** |
 | `crew/` | The player characters. **Empty — built after the remap** |
 | `faces/` | NPCs. **Empty** |
-| `gigs/` | The job board. **Empty** |
-| `factions/` | Corps & Gangs, player-facing. **Empty** — the GM view is under `gm/` |
-| `night-city/` | Districts and places, player-facing. **Empty** — the GM view is under `gm/` |
-| `gear/` | Gear & Chrome — a generated Weapons & Armor page: tier 1 and 2 in Night City names (`../kill-fee-support/content/equipment.renames.json`), stats verbatim |
-| `cards/` | Domain Cards — one page per remapped domain, cards rendered from a `.cards.json` sidecar with the staged netrunner art. **Codex levels 1–2 so far** |
-| `lore/` | How the city works. **Empty** |
-| `table/` | Player-facing: principles, Session 0, character options. **Empty until the remap is done** |
+| `factions/` | Corps & Gangs — the gangs and corporations reference pages, plus player-facing faction pages as the crew meets them |
+| `night-city/` | Night City — the world map, the neighborhoods page, and district pages as the crew moves through them |
+| `gear/` | Gear & Chrome — Cyberware (ancestry features as implants) and the generated Weapons & Armor page |
+| `cards/` | Domain cards (off the nav; linked from the GM pages) — one page per remapped domain, cards rendered from a `.cards.json` sidecar with the staged netrunner art. **Codex levels 1–2 so far** |
 | `gm/` | **Behind the Blackwall** — campaign frame, the remap workbench, the **Card Tracker** (generated from the Daggerheart corpus on every build: all 210 domain cards, converted or not), character menus, the plot, session outline, factions, locations, campaign state, next session |
 | `builder/` | **Character Builder** (player-facing, level 1): the book's nine steps in Night City terms — twelve steps — step 1 is a single pick from 26 archetypes, steps 11–12 are the level 2 and 3 level-ups (the campaign starts at 3) (`../kill-fee-support/content/archetypes.json`: class + subclass under a Night City name, with trope examples), live sheet, saves in the browser, Export/Import JSON, Print. `data.js` is generated from the Daggerheart corpus + the card sidecars through the term map; the page itself lives in `../kill-fee-support/build/builder/` |
 | `edgerunners.css` | The theme |
